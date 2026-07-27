@@ -1,4 +1,5 @@
 import { usePlanetStore } from "../store/planetStore";
+import { useOwnerStore } from "../store/ownerStore";
 
 
 export default function PlanetInfo(){
@@ -10,6 +11,10 @@ export default function PlanetInfo(){
 
     const updatePlanet = usePlanetStore(
         state => state.updatePlanet
+    );
+
+    const owners = useOwnerStore(
+    state => state.owners
     );
 
 
@@ -212,17 +217,62 @@ export default function PlanetInfo(){
 
 
 
-          <div
-              style={{
-                  marginTop:"15px"
-              }}
-          >
+        <div
+            style={{
+                display:"flex",
+                alignItems:"center",
+                marginBottom:"8px"
+            }}
+        >
 
-              <p>
-                  Besitzer: {planet.ownerId || "-"}
-              </p>
+            <label
+                style={{
+                    width:"60px"
+                }}
+            >
+                Besitzer:
+            </label>
 
-          </div>
+
+            <select
+
+                style={{
+                    flex:1
+                }}
+
+                value={planet.ownerId}
+
+                onChange={(event)=>{
+
+                    updatePlanet(
+                        planet.id,
+                        {
+                            ownerId:event.target.value
+                        }
+                    );
+
+                }}
+
+            >
+
+                {
+                    owners.map((owner)=>(
+                        
+                        <option
+                            key={owner.id}
+                            value={owner.id}
+                        >
+                            {owner.name}
+                        </option>
+
+                    ))
+                }
+
+            </select>
+
+        </div>
+
+          
 
 
       </div>

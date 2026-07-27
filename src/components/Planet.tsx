@@ -47,7 +47,7 @@ export default function Planet({ planet }: Props) {
       >
 
         <sphereGeometry
-          args={[5]}
+          args={[15]}
         />
 
         <meshStandardMaterial
@@ -64,13 +64,13 @@ export default function Planet({ planet }: Props) {
       <Billboard
         position={[
           planet.x,
-          planet.y + 15,
+          planet.y + 28,
           planet.z
         ]}
       >
 
         <Text
-          fontSize={12}
+          fontSize={24}
           color="white"
         >
           {planet.name}
