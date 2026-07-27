@@ -8,8 +8,6 @@ export const defaultPlanets: Planet[] = [
     x: 761,
     y: 761,
     z: 761,
-    color: "#ffd166",
-    type: "main",
-    owner: "",
+    ownerId: "goauld",
   },
 ];

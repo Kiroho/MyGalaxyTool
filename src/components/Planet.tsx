@@ -1,6 +1,7 @@
 import { Billboard, Text } from "@react-three/drei";
 import type { Planet as PlanetType } from "../types/planet";
 import { usePlanetStore } from "../store/planetStore";
+import { useOwnerStore } from "../store/ownerStore";
 
 
 type Props = {
@@ -17,6 +18,14 @@ export default function Planet({ planet }: Props) {
     const selectedPlanet = usePlanetStore(
     state => state.selectedPlanet
     );
+
+    const owners = useOwnerStore(
+    state => state.owners
+    );
+
+    const owner = owners.find(
+    owner => owner.id === planet.ownerId
+);
 
   return (
     <>
@@ -45,7 +54,7 @@ export default function Planet({ planet }: Props) {
             color={
                 selectedPlanet?.id === planet.id
                     ? "yellow"
-                    : planet.color
+                    : owner?.color ?? "white"
             }
         />
 

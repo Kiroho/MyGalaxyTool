@@ -219,12 +219,7 @@ export default function PlanetInfo(){
           >
 
               <p>
-                  Typ: {planet.type}
-              </p>
-
-
-              <p>
-                  Besitzer: {planet.owner || "-"}
+                  Besitzer: {planet.ownerId || "-"}
               </p>
 
           </div>

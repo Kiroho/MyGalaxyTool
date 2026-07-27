@@ -8,8 +8,16 @@ import CoordinateLabels from "./CoordinateLabels";
 import { getPlanets } from "../services/PlanetService";
 import { usePlanetStore } from "../store/planetStore";
 
+import { getOwners } from "../services/OwnerService";
+import { useOwnerStore } from "../store/ownerStore";
+
 
 export default function GalaxyScene(){
+
+    const setOwners = useOwnerStore(
+    state => state.setOwners
+    );
+
 
     const planets = usePlanetStore(
         state => state.planets
@@ -25,7 +33,10 @@ export default function GalaxyScene(){
         getPlanets()
             .then(setPlanets);
 
-    },[setPlanets]);
+        getOwners()
+            .then(setOwners);
+
+    }, [setPlanets, setOwners]);
 
 
     const clearSelection = usePlanetStore(
