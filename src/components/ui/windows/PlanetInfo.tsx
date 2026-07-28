@@ -1,5 +1,5 @@
-import { usePlanetStore } from "../store/planetStore";
-import { useOwnerStore } from "../store/ownerStore";
+import { usePlanetStore } from "../../../store/planetStore";
+import { useOwnerStore } from "../../../store/ownerStore";
 
 
 export default function PlanetInfo(){
@@ -7,7 +7,6 @@ export default function PlanetInfo(){
     const planet = usePlanetStore(
         state => state.selectedPlanet
     );
-
 
     const updatePlanet = usePlanetStore(
         state => state.updatePlanet
@@ -70,14 +69,14 @@ export default function PlanetInfo(){
 
                   onChange={(event)=>{
 
-                      updatePlanet(
-                          planet.id,
-                          {
-                              name:event.target.value
-                          }
-                      );
+                    updatePlanet(
+                        planet.id,
+                        {
+                            name:event.target.value
+                        }
+                    );
 
-                  }}
+                }}
 
               />
 
