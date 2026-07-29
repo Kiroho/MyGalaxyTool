@@ -3,16 +3,25 @@ import PlanetInfo from "./components/ui/windows/PlanetInfo";
 import MenuButton from "./components/ui/MenuButton";
 import Menu from "./components/ui/Menu";
 import OwnerWindow from "./components/ui/windows/OwnerWindow";
+import { usePlanetStore } from "./store/planetStore";
+
 
 
 function App(){
+
+  const selectedPlanet = usePlanetStore(
+    state => state.selectedPlanet
+  );
 
   return (
 
     <>
       <GalaxyScene />
 
-      <PlanetInfo />
+      <PlanetInfo
+      key={selectedPlanet?.id ?? "none"} 
+      />
+
       <MenuButton />
       <Menu />
 

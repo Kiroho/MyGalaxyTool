@@ -9,6 +9,7 @@ type PlanetStore = {
 
   // aktuell ausgewählter Planet
   selectedPlanet: Planet | null;
+  
 
 
   // Daten laden
@@ -39,6 +40,12 @@ type PlanetStore = {
     id: string
   ) => void;
 
+  previewPlanet: Planet | null;
+
+  setPreviewPlanet: (
+      planet: Planet | null
+  ) => void;
+
 };
 
 
@@ -58,14 +65,16 @@ export const usePlanetStore = create<PlanetStore>((set)=>({
 
   selectPlanet: (planet) =>
     set({
-      selectedPlanet: planet
+      selectedPlanet: planet,
+      previewPlanet:null
     }),
 
 
 
   clearSelection: () =>
     set({
-      selectedPlanet: null
+      selectedPlanet: null,
+      previewPlanet:null
     }),
 
 
@@ -128,6 +137,13 @@ export const usePlanetStore = create<PlanetStore>((set)=>({
           :
           state.selectedPlanet
 
-    }))
+    })),
+
+    previewPlanet: null,
+
+    setPreviewPlanet:(planet)=>
+    set({
+        previewPlanet:planet
+    }),
 
 }));

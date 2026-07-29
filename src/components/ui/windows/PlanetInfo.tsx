@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { usePlanetStore } from "../../../store/planetStore";
 import { useOwnerStore } from "../../../store/ownerStore";
+import type { Planet } from "../../../types/planet";
 
 
 export default function PlanetInfo(){
@@ -13,33 +15,87 @@ export default function PlanetInfo(){
     );
 
     const owners = useOwnerStore(
-    state => state.owners
+        state => state.owners
     );
+
+
+    const [editPlanet, setEditPlanet] =
+        useState<Planet | null>(null);
+
+
+    const setPreviewPlanet = usePlanetStore(
+        state => state.setPreviewPlanet
+    );
+
+
+    
 
 
     if(!planet)
         return null;
 
 
+    // beim ersten Öffnen Kopie erstellen
+    const currentPlanet =
+        editPlanet ?? {
+            ...planet
+        };
+
+
+
+    const changePlanet = (
+        changes: Partial<Planet>
+    )=>{
+
+        const updatedPlanet = {
+
+            ...currentPlanet,
+
+            ...changes
+
+        };
+
+
+        setEditPlanet(updatedPlanet);
+
+        setPreviewPlanet(updatedPlanet);
+
+    };
+
+
+
     return (
 
       <div
+
           style={{
+
               position:"fixed",
+
               top:20,
+
               right:20,
+
               zIndex:100,
+
               background:"#102544",
+
               color:"white",
+
               padding:"15px",
+
               width:"230px",
+
               borderRadius:"8px"
+
           }}
+
       >
 
           <h3>
               Planet bearbeiten
           </h3>
+
 
 
           <div
@@ -65,22 +121,22 @@ export default function PlanetInfo(){
                       flex:1
                   }}
 
-                  value={planet.name}
+                  value={currentPlanet.name}
 
                   onChange={(event)=>{
 
-                    updatePlanet(
-                        planet.id,
-                        {
-                            name:event.target.value
-                        }
-                    );
+                      changePlanet({
 
-                }}
+                          name:event.target.value
+
+                      });
+
+                  }}
 
               />
 
           </div>
+
 
 
 
@@ -109,22 +165,22 @@ export default function PlanetInfo(){
 
                   type="number"
 
-                  value={planet.x}
+                  value={currentPlanet.x}
 
                   onChange={(event)=>{
 
-                      updatePlanet(
-                          planet.id,
-                          {
-                              x:Number(event.target.value)
-                          }
-                      );
+                      changePlanet({
+
+                          x:Number(event.target.value)
+
+                      });
 
                   }}
 
               />
 
           </div>
+
 
 
 
@@ -153,22 +209,22 @@ export default function PlanetInfo(){
 
                   type="number"
 
-                  value={planet.y}
+                  value={currentPlanet.y}
 
                   onChange={(event)=>{
 
-                      updatePlanet(
-                          planet.id,
-                          {
-                              y:Number(event.target.value)
-                          }
-                      );
+                      changePlanet({
+
+                          y:Number(event.target.value)
+
+                      });
 
                   }}
 
               />
 
           </div>
+
 
 
 
@@ -197,16 +253,15 @@ export default function PlanetInfo(){
 
                   type="number"
 
-                  value={planet.z}
+                  value={currentPlanet.z}
 
                   onChange={(event)=>{
 
-                      updatePlanet(
-                          planet.id,
-                          {
-                              z:Number(event.target.value)
-                          }
-                      );
+                      changePlanet({
+
+                          z:Number(event.target.value)
+
+                      });
 
                   }}
 
@@ -216,62 +271,126 @@ export default function PlanetInfo(){
 
 
 
-        <div
-            style={{
-                display:"flex",
-                alignItems:"center",
-                marginBottom:"8px"
-            }}
-        >
 
-            <label
-                style={{
-                    width:"60px"
-                }}
-            >
-                Besitzer:
-            </label>
+          <div
+              style={{
+                  display:"flex",
+                  alignItems:"center",
+                  marginBottom:"8px"
+              }}
+          >
+
+              <label
+                  style={{
+                      width:"60px"
+                  }}
+              >
+                  Besitzer:
+              </label>
 
 
-            <select
+              <select
 
-                style={{
-                    flex:1
-                }}
+                  style={{
+                      flex:1
+                  }}
 
-                value={planet.ownerId}
+                  value={currentPlanet.ownerId}
 
-                onChange={(event)=>{
+                  onChange={(event)=>{
 
-                    updatePlanet(
-                        planet.id,
-                        {
-                            ownerId:event.target.value
-                        }
-                    );
+                      changePlanet({
 
-                }}
+                          ownerId:event.target.value
 
-            >
+                      });
 
-                {
-                    owners.map((owner)=>(
-                        
-                        <option
-                            key={owner.id}
-                            value={owner.id}
-                        >
-                            {owner.name}
-                        </option>
+                  }}
 
-                    ))
-                }
+              >
 
-            </select>
+                  {
+                      owners.map((owner)=>(
 
-        </div>
+                          <option
 
-          
+                              key={owner.id}
+
+                              value={owner.id}
+
+                          >
+
+                              {owner.name}
+
+                          </option>
+
+                      ))
+                  }
+
+              </select>
+
+          </div>
+
+
+
+          <div
+
+              style={{
+
+                  display:"flex",
+
+                  justifyContent:"flex-end",
+
+                  gap:"10px",
+
+                  marginTop:"15px"
+
+              }}
+
+          >
+
+              <button
+
+                  onClick={()=>{
+
+                      setEditPlanet(null);
+                      setPreviewPlanet(null);
+
+                  }}
+
+              >
+
+                  Abbrechen
+
+              </button>
+
+
+
+              <button
+
+                  onClick={()=>{
+
+                      updatePlanet(
+
+                          currentPlanet.id,
+
+                          currentPlanet
+
+                      );
+
+                      setPreviewPlanet(null);
+                      setEditPlanet(null);
+
+                  }}
+
+              >
+
+                  Speichern
+
+              </button>
+
+
+          </div>
 
 
       </div>

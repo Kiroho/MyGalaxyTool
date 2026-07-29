@@ -25,16 +25,26 @@ export default function Planet({ planet }: Props) {
 
     const owner = owners.find(
     owner => owner.id === planet.ownerId
-);
+    );
+
+    const previewPlanet = usePlanetStore(
+        state => state.previewPlanet
+    );  
+
+  const displayPlanet =
+      previewPlanet?.id === planet.id
+          ? previewPlanet
+          : planet;
+
 
   return (
     <>
 
       <mesh
         position={[
-          planet.x,
-          planet.y,
-          planet.z
+          displayPlanet.x,
+          displayPlanet.z,
+          displayPlanet.y
         ]}
         
         onClick={(event)=>{
@@ -63,9 +73,9 @@ export default function Planet({ planet }: Props) {
 
       <Billboard
         position={[
-          planet.x,
-          planet.y + 28,
-          planet.z
+          displayPlanet.x,
+          displayPlanet.z + 30,
+          displayPlanet.y
         ]}
       >
 
@@ -73,7 +83,7 @@ export default function Planet({ planet }: Props) {
           fontSize={24}
           color="white"
         >
-          {planet.name}
+          {displayPlanet.name}
         </Text>
 
       </Billboard>
