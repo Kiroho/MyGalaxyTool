@@ -2,6 +2,7 @@ import { useState } from "react";
 import { usePlanetStore } from "../../../store/planetStore";
 import { useOwnerStore } from "../../../store/ownerStore";
 import type { Planet } from "../../../types/planet";
+import { xyzToAddress,addressToXYZ, isValidAddress } from "../../../utils/address";
 
 
 export default function PlanetInfo(){
@@ -27,6 +28,9 @@ export default function PlanetInfo(){
         state => state.setPreviewPlanet
     );
 
+    const [addressInput, setAddressInput] = useState<string | null>(null);
+
+    const [addressMessage, setAddressMessage] = useState("");
 
     
 
@@ -42,9 +46,9 @@ export default function PlanetInfo(){
         };
 
 
-
     const changePlanet = (
-        changes: Partial<Planet>
+        changes: Partial<Planet>,
+        updateAddress = true
     )=>{
 
         const updatedPlanet = {
@@ -59,6 +63,34 @@ export default function PlanetInfo(){
         setEditPlanet(updatedPlanet);
 
         setPreviewPlanet(updatedPlanet);
+
+
+        if(updateAddress){
+
+            const newAddress = xyzToAddress(
+                updatedPlanet.x,
+                updatedPlanet.y,
+                updatedPlanet.z
+            );
+
+
+            setAddressInput(newAddress);
+
+
+            if(isValidAddress(newAddress)){
+
+                setAddressMessage("Adresse gültig");
+
+            }
+            else{
+
+                setAddressMessage(
+                    "Ungültige Adresse"
+                );
+
+            }
+
+        }
 
     };
 
@@ -138,6 +170,154 @@ export default function PlanetInfo(){
           </div>
 
 
+            
+
+
+            <div
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    marginBottom: "8px"
+                }}
+            >
+
+                <label
+                    style={{
+                        width: "60px"
+                    }}
+                >
+                    Adresse:
+                </label>
+
+
+                <input
+
+                    style={{
+                        width:"110px"
+                    }}
+
+                    value={
+                        addressInput ??
+                        xyzToAddress(
+                            currentPlanet.x,
+                            currentPlanet.y,
+                            currentPlanet.z
+                        )
+                    }
+
+                    onChange={(event)=>{
+
+                        setAddressInput(
+                            event.target.value
+                        );
+
+                        setAddressMessage("Ungeprüft");
+
+                    }}
+
+                />
+
+                <button
+
+                    style={{
+
+                        marginLeft:"4px",
+
+                        padding:"3px 3px"
+
+                    }}
+
+                    onClick={()=>{
+
+                        const currentAddress =
+                            addressInput ??
+                            xyzToAddress(
+                                currentPlanet.x,
+                                currentPlanet.y,
+                                currentPlanet.z
+                            );
+
+
+                        if(!isValidAddress(currentAddress)){
+
+                            setAddressMessage(
+                                "Ungültige Adresse"
+                            );
+
+                            return;
+
+                        }
+
+
+                        const result =
+                            addressToXYZ(
+                                currentAddress
+                            );
+
+
+                        if(!result){
+
+                            setAddressMessage(
+                                "Ungültige Adresse"
+                            );
+
+                            return;
+
+                        }
+
+
+                        changePlanet({
+
+                            x:result.x,
+                            y:result.y,
+                            z:result.z
+
+                        }, false);
+
+
+                        setAddressMessage(
+                            "Adresse gültig"
+                        );
+
+                    }}
+
+                >
+                    Prüfen
+                </button>
+
+            </div>
+
+
+            <div
+
+                style={{
+
+                    height:"20px",
+
+                    marginBottom:"10px",
+
+                    fontSize:"14px",
+
+                color:
+                    addressMessage === "Ungültige Adresse"
+                    ? "#ff8080"
+                    : addressMessage === "Adresse gültig"
+                    ? "#80ff80"
+                    : "#ffaa40"
+
+                }}
+
+            >
+
+                {
+                    addressMessage
+                        ? addressMessage
+                        : "Ungeprüft"
+                }
+
+            </div>
+
+            
 
 
           <div
