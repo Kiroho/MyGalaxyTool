@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePlanetStore } from "../../../store/planetStore";
 import { useOwnerStore } from "../../../store/ownerStore";
 import type { Planet } from "../../../types/planet";
@@ -37,6 +37,8 @@ export default function PlanetInfo(){
 
     if(!planet)
         return null;
+
+    
 
 
     // beim ersten Öffnen Kopie erstellen
@@ -93,6 +95,60 @@ export default function PlanetInfo(){
         }
 
     };
+
+
+    const checkAddress = (
+        address: string,
+        applyCoordinates = true
+    )=>{
+
+        if(!isValidAddress(address)){
+
+            setAddressMessage(
+                "Ungültige Adresse"
+            );
+
+            return;
+
+        }
+
+
+        const result =
+            addressToXYZ(address);
+
+
+        if(!result){
+
+            setAddressMessage(
+                "Ungültige Adresse"
+            );
+
+            return;
+
+        }
+
+
+        if(applyCoordinates){
+
+            changePlanet({
+
+                x:result.x,
+                y:result.y,
+                z:result.z
+
+            }, false);
+
+        }
+
+
+        setAddressMessage(
+            "Adresse gültig"
+        );
+
+    };
+
+
+
 
 
 
@@ -238,48 +294,11 @@ export default function PlanetInfo(){
                             );
 
 
-                        if(!isValidAddress(currentAddress)){
-
-                            setAddressMessage(
-                                "Ungültige Adresse"
-                            );
-
-                            return;
-
-                        }
-
-
-                        const result =
-                            addressToXYZ(
-                                currentAddress
-                            );
-
-
-                        if(!result){
-
-                            setAddressMessage(
-                                "Ungültige Adresse"
-                            );
-
-                            return;
-
-                        }
-
-
-                        changePlanet({
-
-                            x:result.x,
-                            y:result.y,
-                            z:result.z
-
-                        }, false);
-
-
-                        setAddressMessage(
-                            "Adresse gültig"
+                        checkAddress(
+                            currentAddress
                         );
 
-                    }}
+                    }}                    
 
                 >
                     Prüfen

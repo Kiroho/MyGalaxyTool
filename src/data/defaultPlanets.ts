@@ -13,9 +13,9 @@ export const defaultPlanets: Planet[] = [
   {
     id: "main2",
     name: "Grün",
-    x: 461,
-    y: 761,
-    z: 761,
+    x: 4,
+    y: 272,
+    z: 756,
     ownerId: "neutral",
   },
   {
