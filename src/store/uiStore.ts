@@ -8,6 +8,8 @@ type UIStore = {
 
     menuOpen: boolean;
 
+    createPlanetWindow: WindowState;
+
     ownerWindow: WindowState;
 
     filterWindow: WindowState;
@@ -25,6 +27,9 @@ type UIStore = {
     openFilterWindow: () => void;
     closeFilterWindow: () => void;
 
+    openCreatePlanetWindow: () => void;
+    closeCreatePlanetWindow: () => void;
+
 };
 
 
@@ -32,6 +37,11 @@ export const useUIStore = create<UIStore>((set)=>({
 
     menuOpen: false,
 
+
+    createPlanetWindow: {
+        open: false
+    },
+    
     ownerWindow: {
         open: false
     },
@@ -39,6 +49,7 @@ export const useUIStore = create<UIStore>((set)=>({
     filterWindow: {
         open: false
     },
+
 
 
     toggleMenu: () =>
@@ -51,6 +62,19 @@ export const useUIStore = create<UIStore>((set)=>({
             menuOpen: false
         }),
 
+    openCreatePlanetWindow: () =>
+        set({
+            createPlanetWindow: {
+                open: true
+            }
+        }),
+
+    closeCreatePlanetWindow: () =>
+        set({
+            createPlanetWindow: {
+                open: false
+            }
+        }),
 
     openOwnerWindow: () =>
         set({

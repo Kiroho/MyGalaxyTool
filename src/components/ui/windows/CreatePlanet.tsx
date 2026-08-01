@@ -1,51 +1,82 @@
-import { useState} from "react";
+import { useState } from "react";
+import { useUIStore } from "../../../store/uiStore";
 import { usePlanetStore } from "../../../store/planetStore";
 import { useOwnerStore } from "../../../store/ownerStore";
 import type { Planet } from "../../../types/planet";
-import { xyzToAddress,addressToXYZ, isValidAddress } from "../../../utils/address";
+import { xyzToAddress, addressToXYZ, isValidAddress } from "../../../utils/address";
+import Panel from "../Panel";
 
 
-export default function PlanetInfo(){
+export default function CreatePlanet(){
 
-    const planet = usePlanetStore(
-        state => state.selectedPlanet
+
+    const openCreatePlanetWindow = useUIStore(
+        state => state.createPlanetWindow.open
     );
 
-    const updatePlanet = usePlanetStore(
-        state => state.updatePlanet
+
+    const closeCreatePlanetWindow = useUIStore(
+        state => state.closeCreatePlanetWindow
     );
+
 
     const owners = useOwnerStore(
         state => state.owners
     );
 
 
-    const [editPlanet, setEditPlanet] =
-        useState<Planet | null>(null);
-
-
-    const setPreviewPlanet = usePlanetStore(
-        state => state.setPreviewPlanet
+    const addPlanet = usePlanetStore(
+        state => state.addPlanet
     );
 
-    const [addressInput, setAddressInput] = useState<string | null>(null);
 
-    const [addressMessage, setAddressMessage] = useState("");
+    const createEmptyPlanet = (): Planet => ({
 
-    
+        id: crypto.randomUUID(),
+
+        name:"",
+
+        x:1,
+
+        y:1,
+
+        z:1,
+
+        ownerId: owners[0]?.id ?? ""
+
+    });
 
 
-    if(!planet)
-        return null;
 
-    
+    const [planet, setPlanet] =
+        useState<Planet>(
+            createEmptyPlanet
+        );
 
 
-    // beim ersten Öffnen Kopie erstellen
-    const currentPlanet =
-        editPlanet ?? {
-            ...planet
-        };
+    const [addressInput, setAddressInput] =
+        useState<string | null>(null);
+
+
+    const [addressMessage, setAddressMessage] =
+        useState("");
+
+
+
+    const resetPlanet = () => {
+
+        const newPlanet =
+            createEmptyPlanet();
+
+
+        setPlanet(newPlanet);
+
+        setAddressInput(null);
+
+        setAddressMessage("");
+
+    };
+
 
 
     const changePlanet = (
@@ -55,25 +86,25 @@ export default function PlanetInfo(){
 
         const updatedPlanet = {
 
-            ...currentPlanet,
+            ...planet,
 
             ...changes
 
         };
 
 
-        setEditPlanet(updatedPlanet);
+        setPlanet(updatedPlanet);
 
-        setPreviewPlanet(updatedPlanet);
 
 
         if(updateAddress){
 
-            const newAddress = xyzToAddress(
-                updatedPlanet.x,
-                updatedPlanet.y,
-                updatedPlanet.z
-            );
+            const newAddress =
+                xyzToAddress(
+                    updatedPlanet.x,
+                    updatedPlanet.y,
+                    updatedPlanet.z
+                );
 
 
             setAddressInput(newAddress);
@@ -81,7 +112,9 @@ export default function PlanetInfo(){
 
             if(isValidAddress(newAddress)){
 
-                setAddressMessage("Adresse gültig");
+                setAddressMessage(
+                    "Adresse gültig"
+                );
 
             }
             else{
@@ -95,6 +128,7 @@ export default function PlanetInfo(){
         }
 
     };
+
 
 
     const checkAddress = (
@@ -133,7 +167,9 @@ export default function PlanetInfo(){
             changePlanet({
 
                 x:result.x,
+
                 y:result.y,
+
                 z:result.z
 
             }, false);
@@ -149,6 +185,8 @@ export default function PlanetInfo(){
 
 
 
+    if(!openCreatePlanetWindow)
+        return null;
 
 
 
@@ -156,34 +194,79 @@ export default function PlanetInfo(){
 
       <div
 
-          style={{
+            onClick={(event)=>{
 
-              position:"fixed",
+                event.stopPropagation();
 
-              top:20,
+            }}
 
-              right:20,
+            style={{
 
-              zIndex:100,
+                position:"fixed",
 
-              background:"#102544",
+                top:100,
 
-              color:"white",
+                left:30,
 
-              padding:"15px",
 
-              width:"230px",
-
-              borderRadius:"8px"
-
-          }}
+            }}
 
       >
+        <Panel
+            width={230}
+            minHeight={200}
+        >
+            <div
 
-          <h3>
-              Planet bearbeiten
-          </h3>
+                style={{
 
+                    display:"flex",
+
+                    justifyContent:"space-between",
+
+                    alignItems:"center"
+
+                }}
+
+            >
+
+                <h3>
+                    Planet Erstellen
+                </h3>
+
+
+                <button
+
+                    onClick={() => {
+
+                        resetPlanet();
+
+                        closeCreatePlanetWindow();
+
+                    }}
+
+                    style={{
+
+                        cursor:"pointer",
+
+                        background:"transparent",
+
+                        border:"none",
+
+                        color:"white",
+
+                        fontSize:"20px"
+
+                    }}
+
+                >
+
+                    ✕
+
+                </button>
+
+
+            </div>
 
 
           <div
@@ -209,7 +292,7 @@ export default function PlanetInfo(){
                       flex:1
                   }}
 
-                  value={currentPlanet.name}
+                  value={planet.name}
 
                   onChange={(event)=>{
 
@@ -255,9 +338,9 @@ export default function PlanetInfo(){
                     value={
                         addressInput ??
                         xyzToAddress(
-                            currentPlanet.x,
-                            currentPlanet.y,
-                            currentPlanet.z
+                            planet.x,
+                            planet.y,
+                            planet.z
                         )
                     }
 
@@ -288,9 +371,9 @@ export default function PlanetInfo(){
                         const currentAddress =
                             addressInput ??
                             xyzToAddress(
-                                currentPlanet.x,
-                                currentPlanet.y,
-                                currentPlanet.z
+                                planet.x,
+                                planet.y,
+                                planet.z
                             );
 
 
@@ -364,7 +447,7 @@ export default function PlanetInfo(){
 
                   type="number"
 
-                  value={currentPlanet.x}
+                  value={planet.x}
 
                   onChange={(event)=>{
 
@@ -408,7 +491,7 @@ export default function PlanetInfo(){
 
                   type="number"
 
-                  value={currentPlanet.y}
+                  value={planet.y}
 
                   onChange={(event)=>{
 
@@ -452,7 +535,7 @@ export default function PlanetInfo(){
 
                   type="number"
 
-                  value={currentPlanet.z}
+                  value={planet.z}
 
                   onChange={(event)=>{
 
@@ -494,7 +577,7 @@ export default function PlanetInfo(){
                       flex:1
                   }}
 
-                  value={currentPlanet.ownerId}
+                  value={planet.ownerId}
 
                   onChange={(event)=>{
 
@@ -552,8 +635,9 @@ export default function PlanetInfo(){
 
                   onClick={()=>{
 
-                      setEditPlanet(null);
-                      setPreviewPlanet(null);
+                    resetPlanet();
+
+                    closeCreatePlanetWindow();
 
                   }}
 
@@ -569,16 +653,9 @@ export default function PlanetInfo(){
 
                   onClick={()=>{
 
-                      updatePlanet(
-
-                          currentPlanet.id,
-
-                          currentPlanet
-
-                      );
-
-                      setPreviewPlanet(null);
-                      setEditPlanet(null);
+                    addPlanet(planet);
+                    closeCreatePlanetWindow();
+                    resetPlanet();
 
                   }}
 
@@ -590,7 +667,7 @@ export default function PlanetInfo(){
 
 
           </div>
-
+        </Panel>
 
       </div>
 

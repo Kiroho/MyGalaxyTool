@@ -14,6 +14,10 @@ export default function Menu() {
     );
 
 
+    const openCreatePlanetWindow = useUIStore(
+        state => state.openCreatePlanetWindow
+    );
+
     const openFilterWindow = useUIStore(
         state => state.openFilterWindow
     );
@@ -101,6 +105,41 @@ export default function Menu() {
 
         >
 
+
+            <button
+
+                style={{
+
+                    width:"100%",
+
+                    padding:"10px",
+
+                    cursor:"pointer",
+
+                    background:"transparent",
+
+                    color:"white",
+
+                    border:"none",
+
+                    textAlign:"left"
+
+                }}
+
+
+                onClick={()=>{
+
+                    openCreatePlanetWindow();
+
+                    closeMenu();
+
+                }}
+
+            >
+
+                👥 Planet hinzufügen
+
+            </button>
 
             <button
 

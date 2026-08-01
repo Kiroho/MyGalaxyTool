@@ -4,6 +4,7 @@ import MenuButton from "./components/ui/MenuButton";
 import Menu from "./components/ui/Menu";
 import OwnerWindow from "./components/ui/windows/OwnerWindow";
 import { usePlanetStore } from "./store/planetStore";
+import CreatePlanet from "./components/ui/windows/CreatePlanet";
 
 
 
@@ -26,6 +27,7 @@ function App(){
       <Menu />
 
       <OwnerWindow />
+      <CreatePlanet />
     </>
 
   );

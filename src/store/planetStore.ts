@@ -40,11 +40,13 @@ type PlanetStore = {
     id: string
   ) => void;
 
+  //Preview
   previewPlanet: Planet | null;
 
   setPreviewPlanet: (
       planet: Planet | null
   ) => void;
+
 
 };
 
@@ -145,5 +147,6 @@ export const usePlanetStore = create<PlanetStore>((set)=>({
     set({
         previewPlanet:planet
     }),
+
 
 }));
