@@ -8,6 +8,8 @@ type UIStore = {
 
     menuOpen: boolean;
 
+    showSensors: boolean;
+
     createPlanetWindow: WindowState;
 
     ownerWindow: WindowState;
@@ -16,9 +18,9 @@ type UIStore = {
 
 
     toggleMenu: () => void;
-
     closeMenu: () => void;
 
+    toggleSensors: () => void;
 
     openOwnerWindow: () => void;
     closeOwnerWindow: () => void;
@@ -37,6 +39,7 @@ export const useUIStore = create<UIStore>((set)=>({
 
     menuOpen: false,
 
+    showSensors:false,
 
     createPlanetWindow: {
         open: false
@@ -50,7 +53,11 @@ export const useUIStore = create<UIStore>((set)=>({
         open: false
     },
 
-
+    
+    toggleSensors: () =>
+    set(state=>({
+        showSensors: !state.showSensors
+    })),
 
     toggleMenu: () =>
         set(state=>({

@@ -5,6 +5,7 @@ import Menu from "./components/ui/Menu";
 import OwnerWindow from "./components/ui/windows/OwnerWindow";
 import { usePlanetStore } from "./store/planetStore";
 import CreatePlanet from "./components/ui/windows/CreatePlanet";
+import SensorButton from "./components/ui/SensorButton";
 
 
 
@@ -23,8 +24,13 @@ function App(){
       key={selectedPlanet?.id ?? "none"} 
       />
 
+
+
       <MenuButton />
       <Menu />
+      <SensorButton />
+
+      
 
       <OwnerWindow />
       <CreatePlanet />

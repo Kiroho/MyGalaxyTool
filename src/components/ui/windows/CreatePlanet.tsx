@@ -136,19 +136,7 @@ export default function CreatePlanet(){
         applyCoordinates = true
     )=>{
 
-        if(!isValidAddress(address)){
-
-            setAddressMessage(
-                "Ungültige Adresse"
-            );
-
-            return;
-
-        }
-
-
-        const result =
-            addressToXYZ(address);
+        const result = addressToXYZ(address);
 
 
         if(!result){
@@ -164,22 +152,35 @@ export default function CreatePlanet(){
 
         if(applyCoordinates){
 
-            changePlanet({
+            setPlanet(prev => ({
 
-                x:result.x,
+                ...prev,
 
-                y:result.y,
+                x: result.x,
 
-                z:result.z
+                y: result.y,
 
-            }, false);
+                z: result.z
+
+            }));
 
         }
 
 
-        setAddressMessage(
-            "Adresse gültig"
-        );
+        if(isValidAddress(address)){
+
+            setAddressMessage(
+                "Adresse gültig"
+            );
+
+        }
+        else{
+
+            setAddressMessage(
+                "Ungültige Adresse"
+            );
+
+        }
 
     };
 

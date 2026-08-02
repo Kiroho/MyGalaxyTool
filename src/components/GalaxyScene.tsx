@@ -11,6 +11,9 @@ import { usePlanetStore } from "../store/planetStore";
 import { getOwners } from "../services/OwnerService";
 import { useOwnerStore } from "../store/ownerStore";
 
+import { useUIStore } from "../store/uiStore";
+import Sensor from "./Sensor";
+
 
 export default function GalaxyScene(){
 
@@ -25,6 +28,10 @@ export default function GalaxyScene(){
 
     const setPlanets = usePlanetStore(
         state => state.setPlanets
+    );
+
+    const showSensors = useUIStore(
+        state => state.showSensors
     );
 
 
@@ -75,10 +82,26 @@ export default function GalaxyScene(){
 
             {
                 planets.map((planet)=>(
-                    <Planet
-                    key={planet.id}
-                    planet={planet}
-                    />
+
+                    <group key={planet.id}>
+
+                        <Planet
+                            planet={planet}
+                        />
+
+
+                        {
+                            showSensors && (
+
+                                <Sensor
+                                    planet={planet}
+                                />
+
+                            )
+                        }
+
+                    </group>
+
                 ))
             }
 

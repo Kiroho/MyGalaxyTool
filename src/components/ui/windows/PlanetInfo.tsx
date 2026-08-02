@@ -102,19 +102,7 @@ export default function PlanetInfo(){
         applyCoordinates = true
     )=>{
 
-        if(!isValidAddress(address)){
-
-            setAddressMessage(
-                "Ungültige Adresse"
-            );
-
-            return;
-
-        }
-
-
-        const result =
-            addressToXYZ(address);
+        const result = addressToXYZ(address);
 
 
         if(!result){
@@ -141,11 +129,23 @@ export default function PlanetInfo(){
         }
 
 
-        setAddressMessage(
-            "Adresse gültig"
-        );
+        if(isValidAddress(address)){
+
+            setAddressMessage(
+                "Adresse gültig"
+            );
+
+        }
+        else{
+
+            setAddressMessage(
+                "Ungültige Adresse"
+            );
+
+        }
 
     };
+
 
 
 
