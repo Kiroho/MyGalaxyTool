@@ -1,4 +1,5 @@
 import type { Planet as PlanetType } from "../types/planet";
+import { usePlanetStore } from "../store/planetStore";
 
 
 type Props = {
@@ -10,15 +11,23 @@ export default function Sensor({
     planet
 }: Props) {
 
+    const previewPlanet = usePlanetStore(
+        state => state.previewPlanet
+    );
+
+    const displayPlanet =
+        previewPlanet?.id === planet.id
+            ? previewPlanet
+            : planet;
 
     return (
 
         <mesh
 
             position={[
-                planet.x,
-                planet.z,
-                planet.y
+                displayPlanet.x,
+                displayPlanet.z,
+                displayPlanet.y
             ]}
 
         >

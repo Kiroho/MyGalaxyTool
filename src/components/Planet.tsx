@@ -31,7 +31,7 @@ export default function Planet({ planet }: Props) {
         state => state.previewPlanet
     );  
 
-  const displayPlanet =
+    const displayPlanet =
       previewPlanet?.id === planet.id
           ? previewPlanet
           : planet;
@@ -66,8 +66,22 @@ export default function Planet({ planet }: Props) {
                     ? "yellow"
                     : owner?.color ?? "white"
             }
+            transparent
+            opacity={0.85}
         />
 
+      </mesh>
+
+      <mesh
+          position={[
+              displayPlanet.x,
+              displayPlanet.z,
+              displayPlanet.y
+          ]}
+      >
+          <sphereGeometry args={[1.0]} />
+
+          <meshBasicMaterial color="white" />
       </mesh>
 
 
