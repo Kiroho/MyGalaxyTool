@@ -18,6 +18,8 @@ type UIStore = {
 
     selectedOwnerIds: string[];
 
+    flightTimeWindow: WindowState;
+
 
     toggleMenu: () => void;
     closeMenu: () => void;
@@ -37,6 +39,10 @@ type UIStore = {
     setSelectedOwnerIds: (
         updater: string[] | ((prev:string[]) => string[])
     )=>void;
+
+    
+    openFlightTimeWindow: () => void;
+    closeFlightTimeWindow: () => void;
 
 };
 
@@ -60,6 +66,10 @@ export const useUIStore = create<UIStore>((set)=>({
     },
 
     selectedOwnerIds: [],
+
+    flightTimeWindow: {
+        open: false
+    },
 
     
     toggleSensors: () =>
@@ -132,5 +142,33 @@ export const useUIStore = create<UIStore>((set)=>({
         }));
 
     },
+
+    openFlightTimeWindow: ()=>{
+
+        set({
+
+            flightTimeWindow:{
+                open:true
+            }
+
+        });
+
+    },
+
+
+    closeFlightTimeWindow: ()=>{
+
+        set({
+
+            flightTimeWindow:{
+                open:false
+            }
+
+        });
+
+    },
+
+
+
 
 }));

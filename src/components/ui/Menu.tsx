@@ -22,6 +22,10 @@ export default function Menu() {
         state => state.openPlanetListWindow
     );
 
+    const openFlightTimeWindow = useUIStore(
+        state => state.openFlightTimeWindow
+    );
+
 
     const closeMenu = useUIStore(
         state => state.closeMenu
@@ -211,6 +215,41 @@ export default function Menu() {
                 👥 Besitzerverwaltung
 
             </button>
+
+            <button
+
+                style={{
+
+                    width:"100%",
+
+                    padding:"10px",
+
+                    cursor:"pointer",
+
+                    background:"transparent",
+
+                    color:"white",
+
+                    border:"none",
+
+                    textAlign:"left"
+
+                }}
+
+
+                onClick={()=>{
+
+                    openFlightTimeWindow();
+
+                    closeMenu();
+
+                }}
+
+            >
+
+                🚀 Flugzeitrechner
+
+            </button>            
 
 
         </div>

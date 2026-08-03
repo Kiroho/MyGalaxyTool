@@ -3,6 +3,7 @@ import { useOwnerStore } from "../../../store/ownerStore";
 import { xyzToAddress } from "../../../utils/address";
 import { useUIStore } from "../../../store/uiStore";
 import { useState, useEffect, useRef } from "react";
+import {Trash2 } from "lucide-react";
 import Panel from "../Panel";
 
 
@@ -589,7 +590,8 @@ export default function PlanetList(){
 
                                 >
 
-                                    🗑
+                                    
+                                    <Trash2 size={16} />
 
                                 </button>
 

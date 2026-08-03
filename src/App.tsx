@@ -7,6 +7,7 @@ import { usePlanetStore } from "./store/planetStore";
 import CreatePlanet from "./components/ui/windows/CreatePlanet";
 import SensorButton from "./components/ui/SensorButton";
 import PlanetList from "./components/ui/windows/PlanetList";
+import FlightTimeWindow from "./components/ui/windows/FlightTimeWindow";
 
 
 
@@ -25,8 +26,6 @@ function App(){
       key={selectedPlanet?.id ?? "none"} 
       />
 
-
-
       <MenuButton />
       <Menu />
       <SensorButton />
@@ -34,6 +33,7 @@ function App(){
       <CreatePlanet />
       <OwnerWindow />
       <PlanetList />
+      <FlightTimeWindow />
     </>
 
   );

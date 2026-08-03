@@ -3,10 +3,13 @@ import { Text } from "@react-three/drei";
 
 const SIZE = 1521;
 
+const marks = Array.from(
+    { length: Math.floor(SIZE / 100) + 1 },
+    (_, i) => i * 100
+);
 
 export default function CoordinateLabels() {
 
-  const marks = [0, 500, 1000, 1500];
 
 
   return (
@@ -29,9 +32,9 @@ export default function CoordinateLabels() {
 
         <Text
           key={`x-${value}`}
-          position={[value, -40, 0]}
-          rotation={[-Math.PI / 2, 0, 0]}
-          fontSize={20}
+          position={[value, 0, -40]}
+          rotation={[-Math.PI / 2, 0, Math.PI / 2]}
+          fontSize={24}
           color="#cccccc"
         >
           {value}
@@ -58,7 +61,7 @@ export default function CoordinateLabels() {
           key={`y-${value}`}
           position={[-40, value, 0]}
           rotation={[0,0,0]}
-          fontSize={20}
+          fontSize={24}
           color="#cccccc"
         >
           {value}
@@ -85,8 +88,8 @@ export default function CoordinateLabels() {
         <Text
           key={`z-${value}`}
           position={[-40,0,value]}
-          rotation={[Math.PI / 2,0,0]}
-          fontSize={20}
+          rotation={[-Math.PI / 2,0,0]}
+          fontSize={24}
           color="#cccccc"
         >
           {value}

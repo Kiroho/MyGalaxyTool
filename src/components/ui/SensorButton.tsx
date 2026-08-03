@@ -5,8 +5,9 @@ import { Globe } from "lucide-react";
 
 export default function SensorButton(){
 
-
-
+    const showSensors = useUIStore(
+        state => state.showSensors
+    );
 
     const toggleSensors = useUIStore(
         state => state.toggleSensors
@@ -48,7 +49,9 @@ export default function SensorButton(){
 
                 zIndex: 100,
 
-                color: "white",
+                color: showSensors
+                    ? "cyan"
+                    : "white",
 
                 display: "flex",
 
