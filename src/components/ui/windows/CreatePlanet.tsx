@@ -201,73 +201,15 @@ export default function CreatePlanet(){
 
             }}
 
-            style={{
-
-                position:"fixed",
-
-                top:100,
-
-                left:30,
-
-
-            }}
-
       >
         <Panel
+            title="Planet Erstellen"
             width={230}
             minHeight={200}
+            initialX={30}
+            initialY={100}
+            onClose={closeCreatePlanetWindow}
         >
-            <div
-
-                style={{
-
-                    display:"flex",
-
-                    justifyContent:"space-between",
-
-                    alignItems:"center"
-
-                }}
-
-            >
-
-                <h3>
-                    Planet Erstellen
-                </h3>
-
-
-                <button
-
-                    onClick={() => {
-
-                        resetPlanet();
-
-                        closeCreatePlanetWindow();
-
-                    }}
-
-                    style={{
-
-                        cursor:"pointer",
-
-                        background:"transparent",
-
-                        border:"none",
-
-                        color:"white",
-
-                        fontSize:"20px"
-
-                    }}
-
-                >
-
-                    ✕
-
-                </button>
-
-
-            </div>
 
 
           <div

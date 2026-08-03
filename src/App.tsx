@@ -6,6 +6,7 @@ import OwnerWindow from "./components/ui/windows/OwnerWindow";
 import { usePlanetStore } from "./store/planetStore";
 import CreatePlanet from "./components/ui/windows/CreatePlanet";
 import SensorButton from "./components/ui/SensorButton";
+import PlanetList from "./components/ui/windows/PlanetList";
 
 
 
@@ -30,10 +31,9 @@ function App(){
       <Menu />
       <SensorButton />
 
-      
-
-      <OwnerWindow />
       <CreatePlanet />
+      <OwnerWindow />
+      <PlanetList />
     </>
 
   );

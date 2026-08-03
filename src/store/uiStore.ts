@@ -14,7 +14,9 @@ type UIStore = {
 
     ownerWindow: WindowState;
 
-    filterWindow: WindowState;
+    planetListWindow: WindowState;
+
+    selectedOwnerIds: string[];
 
 
     toggleMenu: () => void;
@@ -26,11 +28,15 @@ type UIStore = {
     closeOwnerWindow: () => void;
 
 
-    openFilterWindow: () => void;
-    closeFilterWindow: () => void;
+    openPlanetListWindow: () => void;
+    closePlanetListWindow: () => void;
 
     openCreatePlanetWindow: () => void;
     closeCreatePlanetWindow: () => void;
+
+    setSelectedOwnerIds: (
+        updater: string[] | ((prev:string[]) => string[])
+    )=>void;
 
 };
 
@@ -49,9 +55,11 @@ export const useUIStore = create<UIStore>((set)=>({
         open: false
     },
 
-    filterWindow: {
+    planetListWindow: {
         open: false
     },
+
+    selectedOwnerIds: [],
 
     
     toggleSensors: () =>
@@ -98,18 +106,31 @@ export const useUIStore = create<UIStore>((set)=>({
         }),
 
 
-    openFilterWindow: () =>
+    openPlanetListWindow: () =>
         set({
-            filterWindow: {
+            planetListWindow: {
                 open: true
             }
         }),
 
-    closeFilterWindow: () =>
+    closePlanetListWindow: () =>
         set({
-            filterWindow: {
+            planetListWindow: {
                 open: false
             }
-        })
+        }),
+
+    setSelectedOwnerIds:(updater)=>{
+
+        set(state => ({
+
+            selectedOwnerIds:
+                typeof updater === "function"
+                ? updater(state.selectedOwnerIds)
+                : updater
+
+        }));
+
+    },
 
 }));

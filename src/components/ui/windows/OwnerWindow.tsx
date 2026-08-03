@@ -59,24 +59,17 @@ export default function OwnerWindow() {
 
             }}
 
-            style={{
-
-                position:"fixed",
-
-                top:100,
-
-                left:30,
-
-            }}
 
         >
 
+
             <Panel
-
+                title="Besitzerverwaltung"
                 width={350}
-
                 minHeight={200}
-
+                initialX={30}
+                initialY={100}
+                onClose={closeOwnerWindow}
             >
 
 
@@ -95,13 +88,6 @@ export default function OwnerWindow() {
                 >
 
                     <div>
-
-                        <h3>
-
-                            Besitzerverwaltung
-
-                        </h3>
-
 
                         <button
 
@@ -134,30 +120,6 @@ export default function OwnerWindow() {
 
                     </div>
 
-
-                    <button
-
-                        onClick={closeOwnerWindow}
-
-                        style={{
-
-                            cursor:"pointer",
-
-                            background:"transparent",
-
-                            border:"none",
-
-                            color:"white",
-
-                            fontSize:"20px"
-
-                        }}
-
-                    >
-
-                        ✕
-
-                    </button>
 
 
                 </div>

@@ -34,6 +34,10 @@ export default function GalaxyScene(){
         state => state.showSensors
     );
 
+    const selectedOwnerIds = useUIStore(
+        state => state.selectedOwnerIds
+    );
+
 
     useEffect(()=>{
 
@@ -81,7 +85,13 @@ export default function GalaxyScene(){
             <CoordinateLabels />
 
             {
-                planets.map((planet)=>(
+                planets
+                .filter(planet =>
+                    selectedOwnerIds.includes(
+                        planet.ownerId
+                    )
+                )
+                .map((planet)=>(
 
                     <group key={planet.id}>
 

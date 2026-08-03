@@ -18,8 +18,8 @@ export default function Menu() {
         state => state.openCreatePlanetWindow
     );
 
-    const openFilterWindow = useUIStore(
-        state => state.openFilterWindow
+    const openPlanetListWindow = useUIStore(
+        state => state.openPlanetListWindow
     );
 
 
@@ -137,9 +137,45 @@ export default function Menu() {
 
             >
 
-                👥 Planet hinzufügen
+                🌍 Planet hinzufügen
 
             </button>
+
+            <button
+
+                style={{
+
+                    width:"100%",
+
+                    padding:"10px",
+
+                    cursor:"pointer",
+
+                    background:"transparent",
+
+                    color:"white",
+
+                    border:"none",
+
+                    textAlign:"left"
+
+                }}
+
+
+                onClick={()=>{
+
+                    openPlanetListWindow();
+
+                    closeMenu();
+
+                }}
+
+            >
+
+                🪐 Planetenliste
+
+            </button>
+
 
             <button
 
@@ -173,43 +209,6 @@ export default function Menu() {
             >
 
                 👥 Besitzerverwaltung
-
-            </button>
-
-
-
-            <button
-
-                style={{
-
-                    width:"100%",
-
-                    padding:"10px",
-
-                    cursor:"pointer",
-
-                    background:"transparent",
-
-                    color:"white",
-
-                    border:"none",
-
-                    textAlign:"left"
-
-                }}
-
-
-                onClick={()=>{
-
-                    openFilterWindow();
-
-                    closeMenu();
-
-                }}
-
-            >
-
-                🔍 Filter
 
             </button>
 
