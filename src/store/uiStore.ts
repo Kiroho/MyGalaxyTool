@@ -10,7 +10,15 @@ type UIStore = {
 
     showSensors: boolean;
 
-    createPlanetWindow: WindowState;
+    createPlanetWindow:{
+        open:boolean;
+
+        presetPosition:{
+            x:number;
+            y:number;
+            z:number;
+        } | null;
+    };
 
     ownerWindow: WindowState;
 
@@ -19,6 +27,9 @@ type UIStore = {
     selectedOwnerIds: string[];
 
     flightTimeWindow: WindowState;
+
+    sensorNetworkWindow: WindowState;
+
 
 
     toggleMenu: () => void;
@@ -35,6 +46,13 @@ type UIStore = {
 
     openCreatePlanetWindow: () => void;
     closeCreatePlanetWindow: () => void;
+    openCreatePlanetWithPosition: (
+        position:{
+            x:number;
+            y:number;
+            z:number;
+        }
+    )=>void;
 
     setSelectedOwnerIds: (
         updater: string[] | ((prev:string[]) => string[])
@@ -43,6 +61,9 @@ type UIStore = {
     
     openFlightTimeWindow: () => void;
     closeFlightTimeWindow: () => void;
+
+    openSensorNetworkWindow: () => void;
+    closeSensorNetworkWindow: () => void;
 
 };
 
@@ -54,8 +75,10 @@ export const useUIStore = create<UIStore>((set)=>({
     showSensors:false,
 
     createPlanetWindow: {
-        open: false
+        open: false,
+        presetPosition:null
     },
+
     
     ownerWindow: {
         open: false
@@ -69,6 +92,10 @@ export const useUIStore = create<UIStore>((set)=>({
 
     flightTimeWindow: {
         open: false
+    },
+
+    sensorNetworkWindow:{
+        open:false
     },
 
     
@@ -87,17 +114,43 @@ export const useUIStore = create<UIStore>((set)=>({
             menuOpen: false
         }),
 
-    openCreatePlanetWindow: () =>
+    openCreatePlanetWindow:()=>{
+
         set({
-            createPlanetWindow: {
-                open: true
+
+            createPlanetWindow:{
+
+                open:true,
+
+                presetPosition:null
+
             }
-        }),
+
+        });
+
+    },
+
+    openCreatePlanetWithPosition:(position)=>{
+
+        set({
+
+            createPlanetWindow:{
+
+                open:true,
+
+                presetPosition:position
+
+            }
+
+        });
+
+    },
 
     closeCreatePlanetWindow: () =>
         set({
             createPlanetWindow: {
-                open: false
+                open:false,
+                presetPosition:null
             }
         }),
 
@@ -157,15 +210,28 @@ export const useUIStore = create<UIStore>((set)=>({
 
 
     closeFlightTimeWindow: ()=>{
-
         set({
-
             flightTimeWindow:{
                 open:false
             }
-
         });
+    },
 
+    openSensorNetworkWindow: ()=>{
+        set({
+            sensorNetworkWindow:{
+                open:true
+            }
+        });
+    },
+
+    
+    closeSensorNetworkWindow: ()=>{
+        set({
+            sensorNetworkWindow:{
+                open:false
+            }
+        });
     },
 
 

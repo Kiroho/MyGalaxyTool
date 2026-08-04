@@ -8,6 +8,8 @@ import CreatePlanet from "./components/ui/windows/CreatePlanet";
 import SensorButton from "./components/ui/SensorButton";
 import PlanetList from "./components/ui/windows/PlanetList";
 import FlightTimeWindow from "./components/ui/windows/FlightTimeWindow";
+import SensorNetworkGeneratorWindow from "./components/ui/windows/SensorNetworkGeneratorWindow";
+import { useUIStore } from "./store/uiStore";
 
 
 
@@ -16,6 +18,11 @@ function App(){
   const selectedPlanet = usePlanetStore(
     state => state.selectedPlanet
   );
+
+  const presetPosition =
+    useUIStore(
+        state => state.createPlanetWindow.presetPosition
+    );
 
   return (
 
@@ -30,10 +37,20 @@ function App(){
       <Menu />
       <SensorButton />
 
-      <CreatePlanet />
+      <CreatePlanet
+          key={
+              presetPosition
+              ?
+              `${presetPosition.x}-${presetPosition.y}-${presetPosition.z}`
+              :
+              "empty"
+          }
+      />
+
       <OwnerWindow />
       <PlanetList />
       <FlightTimeWindow />
+      <SensorNetworkGeneratorWindow />
     </>
 
   );

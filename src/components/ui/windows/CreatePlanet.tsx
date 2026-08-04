@@ -15,6 +15,11 @@ export default function CreatePlanet(){
     );
 
 
+    const presetPosition = useUIStore(
+        state => state.createPlanetWindow.presetPosition
+    );
+
+
     const closeCreatePlanetWindow = useUIStore(
         state => state.closeCreatePlanetWindow
     );
@@ -30,17 +35,18 @@ export default function CreatePlanet(){
     );
 
 
+
     const createEmptyPlanet = (): Planet => ({
 
         id: crypto.randomUUID(),
 
         name:"",
 
-        x:1,
+        x: presetPosition?.x ?? 1,
 
-        y:1,
+        y: presetPosition?.y ?? 1,
 
-        z:1,
+        z: presetPosition?.z ?? 1,
 
         ownerId: owners[0]?.id ?? ""
 
@@ -54,12 +60,18 @@ export default function CreatePlanet(){
         );
 
 
+
     const [addressInput, setAddressInput] =
         useState<string | null>(null);
 
 
+
     const [addressMessage, setAddressMessage] =
         useState("");
+
+
+
+
 
 
 
@@ -132,11 +144,13 @@ export default function CreatePlanet(){
 
 
     const checkAddress = (
-        address: string,
-        applyCoordinates = true
+        address:string,
+        applyCoordinates=true
     )=>{
 
-        const result = addressToXYZ(address);
+        const result =
+            addressToXYZ(address);
+
 
 
         if(!result){
@@ -150,21 +164,23 @@ export default function CreatePlanet(){
         }
 
 
+
         if(applyCoordinates){
 
-            setPlanet(prev => ({
+            setPlanet(prev=>({
 
                 ...prev,
 
-                x: result.x,
+                x:result.x,
 
-                y: result.y,
+                y:result.y,
 
-                z: result.z
+                z:result.z
 
             }));
 
         }
+
 
 
         if(isValidAddress(address)){
@@ -202,13 +218,21 @@ export default function CreatePlanet(){
             }}
 
       >
+
         <Panel
+
             title="Planet Erstellen"
+
             width={230}
+
             minHeight={200}
+
             initialX={30}
+
             initialY={100}
+
             onClose={closeCreatePlanetWindow}
+
         >
 
 

@@ -26,6 +26,11 @@ export default function Menu() {
         state => state.openFlightTimeWindow
     );
 
+    const openSensorNetworkWindow =
+        useUIStore(
+            state => state.openSensorNetworkWindow
+        );
+
 
     const closeMenu = useUIStore(
         state => state.closeMenu
@@ -250,6 +255,41 @@ export default function Menu() {
                 🚀 Flugzeitrechner
 
             </button>            
+
+            <button
+
+                style={{
+
+                    width:"100%",
+
+                    padding:"10px",
+
+                    cursor:"pointer",
+
+                    background:"transparent",
+
+                    color:"white",
+
+                    border:"none",
+
+                    textAlign:"left"
+
+                }}
+
+
+                onClick={()=>{
+
+                    openSensorNetworkWindow();
+
+                    closeMenu();
+
+                }}
+
+            >
+
+                🌐 Sensornetz (Beta)
+
+            </button>  
 
 
         </div>

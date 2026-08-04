@@ -823,7 +823,7 @@ export default function FlightTimeWindow(){
 
                 <label>
 
-                    S/LJ
+                    s/lj
 
                 </label>
 
