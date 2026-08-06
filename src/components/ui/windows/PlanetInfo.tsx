@@ -494,13 +494,13 @@ export default function PlanetInfo(){
                       flex:1
                   }}
 
-                  value={currentPlanet.ownerId}
+                  value={currentPlanet.owner_id}
 
                   onChange={(event)=>{
 
                       changePlanet({
 
-                          ownerId:event.target.value
+                          owner_id:event.target.value
 
                       });
 

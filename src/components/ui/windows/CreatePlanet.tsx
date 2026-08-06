@@ -48,7 +48,7 @@ export default function CreatePlanet(){
 
         z: presetPosition?.z ?? 1,
 
-        ownerId: owners[0]?.id ?? ""
+        owner_id: owners[0]?.id ?? ""
 
     });
 
@@ -544,13 +544,13 @@ export default function CreatePlanet(){
                       flex:1
                   }}
 
-                  value={planet.ownerId}
+                  value={planet.owner_id}
 
                   onChange={(event)=>{
 
                       changePlanet({
 
-                          ownerId:event.target.value
+                          owner_id:event.target.value
 
                       });
 
@@ -618,13 +618,31 @@ export default function CreatePlanet(){
 
               <button
 
-                  onClick={()=>{
+                onClick={async()=>{
 
-                    addPlanet(planet);
-                    closeCreatePlanetWindow();
-                    resetPlanet();
+                        try{
 
-                  }}
+                            await addPlanet(
+                                planet
+                            );
+
+
+                            closeCreatePlanetWindow();
+
+                            resetPlanet();
+
+
+                        }
+                        catch(error){
+
+                            console.error(
+                                "Planet konnte nicht erstellt werden:",
+                                error
+                            );
+
+                        }
+
+                    }}
 
               >
 

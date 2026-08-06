@@ -144,7 +144,7 @@ export default function PlanetList(){
     const filteredPlanets =
         planets.filter(planet =>
             selectedOwnerIds.includes(
-                planet.ownerId
+                planet.owner_id
             )
         );
 
@@ -466,7 +466,7 @@ export default function PlanetList(){
                                         const owner =
                                             owners.find(
                                                 owner =>
-                                                owner.id === planet.ownerId
+                                                owner.id === planet.owner_id
                                             );
 
 

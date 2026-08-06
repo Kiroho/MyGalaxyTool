@@ -10,11 +10,12 @@ import PlanetList from "./components/ui/windows/PlanetList";
 import FlightTimeWindow from "./components/ui/windows/FlightTimeWindow";
 import SensorNetworkGeneratorWindow from "./components/ui/windows/SensorNetworkGeneratorWindow";
 import { useUIStore } from "./store/uiStore";
-
-
+import { useState, useEffect } from "react";
+import LoginPage from "./components/ui/windows/LoginPage";
+import { checkAuth, validateSession } from "./utils/auth";
 
 function App(){
-
+    
   const selectedPlanet = usePlanetStore(
     state => state.selectedPlanet
   );
@@ -23,6 +24,128 @@ function App(){
     useUIStore(
         state => state.createPlanetWindow.presetPosition
     );
+
+  const loadPlanets =
+      usePlanetStore(
+          state => state.loadPlanets
+      );
+
+  const [loggedIn, setLoggedIn] =
+    useState(false);
+
+
+  const [checkingAuth, setCheckingAuth] =
+      useState(true);
+
+
+  useEffect(()=>{
+
+      async function init(){
+
+        console.log("APP INIT");
+
+          const result =
+              await checkAuth();
+
+          console.log(
+            "AUTH RESULT:",
+            result
+          );
+
+
+          setLoggedIn(result);
+
+
+          if(result){
+
+            console.log(
+                "LOAD PLANETS START"
+            );
+
+              await loadPlanets();
+
+              console.log(
+                "LOAD PLANETS END"
+            );
+
+          }
+
+
+          setCheckingAuth(false);
+
+      }
+
+
+      init();
+
+
+  },[
+    loadPlanets
+  ]);
+
+
+
+  useEffect(()=>{
+
+      const interval =
+          setInterval(
+              () => {
+
+                  validateSession()
+                  .then(
+                      (valid)=>{
+
+                          if(!valid){
+
+                              setLoggedIn(false);
+
+                          }
+
+                      }
+                  );
+
+
+              },
+
+              5 * 60 * 1000
+          );
+
+
+      return () => {
+
+          clearInterval(
+              interval
+          );
+
+      };
+
+
+  },[]);
+
+
+
+  if(checkingAuth){
+
+    return null;
+
+  }
+
+  if(!loggedIn){
+
+    return (
+
+      <LoginPage
+
+        onLoginSuccess={
+          () => setLoggedIn(true)
+        }
+
+      />
+
+    );
+
+  }
+
 
   return (
 

@@ -6,19 +6,31 @@ export const defaultOwners: Owner[] = [
     {
         id:"neutral",
         name:"Neutral",
-        color:"#ffffff"
+        color:"#c7c7c7"
     },
 
     {
-        id:"tauri",
-        name:"Tau'ri",
-        color:"#4da6ff"
+        id:"menschen",
+        name:"Menschen",
+        color:"#3e9fff"
     },
 
     {
-        id:"goauld",
-        name:"Goa'uld",
-        color:"#d4af37"
+        id:"marsianer",
+        name:"Marsianer",
+        color:"#d47e37"
+    },
+
+    {
+        id:"neptunier",
+        name:"Neptunier",
+        color:"#46ff65"
+    },
+
+    {
+        id:"cerus",
+        name:"Cerus",
+        color:"#825fff"
     }
 
 ];

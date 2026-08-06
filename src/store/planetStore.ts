@@ -1,5 +1,11 @@
 import { create } from "zustand";
 import type { Planet } from "../types/planet";
+import {
+    getPlanets,
+    createPlanet,
+    updatePlanet as apiUpdatePlanet,
+    deletePlanet as apiDeletePlanet
+} from "../utils/galaxyAPI";
 
 
 type PlanetStore = {
@@ -24,21 +30,21 @@ type PlanetStore = {
 
   // Bearbeiten
   updatePlanet: (
-    id: string,
-    data: Partial<Planet>
-  ) => void;
+      id: string,
+      data: Partial<Planet>
+  ) => Promise<void>;
 
 
   // Neu erstellen
   addPlanet: (
     planet: Planet
-  ) => void;
+  ) => Promise<void>;
 
 
   // Löschen
   deletePlanet: (
     id: string
-  ) => void;
+  ) => Promise<void>;
 
   //Preview
   previewPlanet: Planet | null;
@@ -46,6 +52,8 @@ type PlanetStore = {
   setPreviewPlanet: (
       planet: Planet | null
   ) => void;
+
+  loadPlanets: () => Promise<void>;
 
 
 };
@@ -79,74 +87,132 @@ export const usePlanetStore = create<PlanetStore>((set)=>({
       previewPlanet:null
     }),
 
-
-
-  updatePlanet: (id, data) =>
-    set((state)=>({
-
-      planets: state.planets.map((planet)=>
-
-        planet.id === id
-          ?
-          {
-            ...planet,
-            ...data
-          }
-          :
-          planet
-
-      ),
-
-      selectedPlanet:
-        state.selectedPlanet?.id === id
-          ?
-          {
-            ...state.selectedPlanet,
-            ...data
-          }
-          :
-          state.selectedPlanet
-
-    })),
-
-
-
-  addPlanet: (planet) =>
-    set((state)=>({
-
-      planets:[
-        ...state.planets,
-        planet
-      ]
-
-    })),
-
-
-
-  deletePlanet: (id) =>
-    set((state)=>({
-
-      planets:
-        state.planets.filter(
-          planet => planet.id !== id
-        ),
-
-
-      selectedPlanet:
-        state.selectedPlanet?.id === id
-          ?
-          null
-          :
-          state.selectedPlanet
-
-    })),
-
+    
     previewPlanet: null,
 
     setPreviewPlanet:(planet)=>
     set({
         previewPlanet:planet
     }),
+
+
+
+    
+
+  updatePlanet: async (
+      id,
+      data
+  )=>{
+
+
+      const updated =
+          await apiUpdatePlanet(
+              id,
+              data
+          );
+
+
+      set((state)=>({
+
+          planets:
+              state.planets.map(
+                  planet =>
+                      planet.id === id
+                      ?
+                      updated
+                      :
+                      planet
+              ),
+
+
+          selectedPlanet:
+              state.selectedPlanet?.id === id
+              ?
+              updated
+              :
+              state.selectedPlanet
+
+      }));
+
+  },
+
+
+
+  addPlanet: async (
+      planet
+  )=>{
+
+
+      const created =
+          await createPlanet(
+              planet
+          );
+
+
+      set((state)=>({
+
+          planets:[
+              ...state.planets,
+              created
+          ]
+
+      }));
+
+  },
+
+
+
+  deletePlanet: async (
+      id
+  )=>{
+
+
+      await apiDeletePlanet(
+          id
+      );
+
+
+      set((state)=>({
+
+          planets:
+              state.planets.filter(
+                  planet =>
+                      planet.id !== id
+              ),
+
+
+          selectedPlanet:
+              state.selectedPlanet?.id === id
+              ?
+              null
+              :
+              state.selectedPlanet
+
+      }));
+
+  },
+
+
+
+
+    
+loadPlanets: async () => {
+
+    console.log("Lade Planeten aus API...");
+
+    const planets =
+        await getPlanets();
+
+    console.log(
+        "Planeten von API:",
+        planets
+    );
+
+    set({
+        planets
+    });
+
+},
 
 
 }));

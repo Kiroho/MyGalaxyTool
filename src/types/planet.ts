@@ -4,5 +4,5 @@ export type Planet = {
   x: number;
   y: number;
   z: number;
-  ownerId: string;
+  owner_id: string;
 };

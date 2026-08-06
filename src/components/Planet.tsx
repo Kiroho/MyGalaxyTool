@@ -24,7 +24,7 @@ export default function Planet({ planet }: Props) {
     );
 
     const owner = owners.find(
-    owner => owner.id === planet.ownerId
+    owner => owner.id === planet.owner_id
     );
 
     const previewPlanet = usePlanetStore(

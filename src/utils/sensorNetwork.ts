@@ -90,9 +90,9 @@ radius:number
 
 const candidates = 10000;
 
-const maxRounds = 2;
+const maxRounds = 3;
 
-const relaxationStep = 0.1;
+const relaxationStep = 0.05;
 
 /*
 Mehrere Suchrunden
