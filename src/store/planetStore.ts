@@ -32,13 +32,13 @@ type PlanetStore = {
   updatePlanet: (
       id: string,
       data: Partial<Planet>
-  ) => Promise<void>;
+  ) => Promise<Planet>;
 
 
   // Neu erstellen
   addPlanet: (
     planet: Planet
-  ) => Promise<void>;
+  ) => Promise<Planet>;
 
 
   // Löschen
@@ -104,16 +104,13 @@ export const usePlanetStore = create<PlanetStore>((set)=>({
       data
   )=>{
 
-
       const updated =
           await apiUpdatePlanet(
               id,
               data
           );
 
-
       set((state)=>({
-
           planets:
               state.planets.map(
                   planet =>
@@ -131,23 +128,24 @@ export const usePlanetStore = create<PlanetStore>((set)=>({
               updated
               :
               state.selectedPlanet
-
       }));
+      return updated;
 
   },
 
 
 
-  addPlanet: async (
-      planet
-  )=>{
-
+  addPlanet: async (planet)=>{
 
       const created =
           await createPlanet(
               planet
           );
 
+              console.log(
+        "Erstellter Planet:",
+        created
+    );
 
       set((state)=>({
 
@@ -157,6 +155,7 @@ export const usePlanetStore = create<PlanetStore>((set)=>({
           ]
 
       }));
+      return created;
 
   },
 
@@ -165,8 +164,6 @@ export const usePlanetStore = create<PlanetStore>((set)=>({
   deletePlanet: async (
       id
   )=>{
-
-
       await apiDeletePlanet(
           id
       );

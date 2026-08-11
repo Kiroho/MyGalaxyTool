@@ -35,7 +35,6 @@ export default function CreatePlanet(){
     );
 
 
-
     const createEmptyPlanet = (): Planet => ({
 
         id: crypto.randomUUID(),
@@ -622,11 +621,29 @@ export default function CreatePlanet(){
 
                         try{
 
-                            await addPlanet(
-                                planet
+                            const planetToCreate = {
+
+                                ...planet,
+
+                                owner_id:
+                                    planet.owner_id ||
+                                    owners[0]?.id ||
+                                    ""
+
+                            };
+
+
+                            console.log(
+                                "Planet vor dem Speichern:",
+                                planetToCreate
                             );
 
 
+
+                            await addPlanet(
+                                planetToCreate
+                            );
+                            
                             closeCreatePlanetWindow();
 
                             resetPlanet();

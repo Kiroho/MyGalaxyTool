@@ -25,10 +25,6 @@ function App(){
         state => state.createPlanetWindow.presetPosition
     );
 
-  const loadPlanets =
-      usePlanetStore(
-          state => state.loadPlanets
-      );
 
   const [loggedIn, setLoggedIn] =
     useState(false);
@@ -38,37 +34,24 @@ function App(){
       useState(true);
 
 
-  useEffect(()=>{
+  useEffect(() => {
 
-      async function init(){
+      async function init() {
 
-        console.log("APP INIT");
+          console.log("APP INIT");
+
 
           const result =
               await checkAuth();
 
+
           console.log(
-            "AUTH RESULT:",
-            result
+              "AUTH RESULT:",
+              result
           );
 
 
           setLoggedIn(result);
-
-
-          if(result){
-
-            console.log(
-                "LOAD PLANETS START"
-            );
-
-              await loadPlanets();
-
-              console.log(
-                "LOAD PLANETS END"
-            );
-
-          }
 
 
           setCheckingAuth(false);
@@ -78,10 +61,7 @@ function App(){
 
       init();
 
-
-  },[
-    loadPlanets
-  ]);
+  }, []);
 
 
 

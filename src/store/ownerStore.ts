@@ -1,6 +1,13 @@
 import { create } from "zustand";
 import type { Owner } from "../types/owner";
 
+import {
+    getOwners,
+    createOwner as apiCreateOwner,
+    updateOwner as apiUpdateOwner,
+    deleteOwner as apiDeleteOwner
+} from "../utils/galaxyAPI";
+
 
 type OwnerStore = {
 
@@ -12,85 +19,145 @@ type OwnerStore = {
     ) => void;
 
 
+    loadOwners: () => Promise<void>;
+
+
     addOwner: (
         owner: Owner
-    ) => void;
+    ) => Promise<Owner>;
 
 
     updateOwner: (
         id: string,
         changes: Partial<Owner>
-    ) => void;
+    ) => Promise<Owner>;
 
 
     deleteOwner: (
         id: string
-    ) => void;
+    ) => Promise<boolean>;
 
 };
 
 
 
-export const useOwnerStore = create<OwnerStore>((set)=>({
+export const useOwnerStore =
+    create<OwnerStore>((set) => ({
+
+        owners: [],
 
 
-    owners: [],
-
-
-
-    setOwners: (owners) =>
-        set({
-            owners
-        }),
-
-
-
-    addOwner: (owner) =>
-        set(state=>({
-
-            owners:[
-                ...state.owners,
-                owner
-            ]
-
-        })),
+        setOwners: (owners) =>
+            set({
+                owners
+            }),
 
 
 
-    updateOwner: (
-        id,
-        changes
-    ) =>
-        set(state=>({
+        loadOwners: async () => {
 
-            owners:
-                state.owners.map(owner=>
-
-                    owner.id === id
-
-                    ? {
-                        ...owner,
-                        ...changes
-                    }
-
-                    : owner
-
-                )
-
-        })),
+            console.log(
+                "Lade Besitzer aus API..."
+            );
 
 
+            const owners =
+                await getOwners();
 
-    deleteOwner: (id) =>
-        set(state=>({
 
-            owners:
-                state.owners.filter(owner=>
-                    owner.id !== id
-                )
+            console.log(
+                "Besitzer von API:",
+                owners
+            );
 
-        }))
+
+            set({
+                owners
+            });
+
+        },
 
 
 
-}));
+        addOwner: async (
+            owner
+        ) => {
+
+            const created =
+                await apiCreateOwner(
+                    owner
+                );
+
+
+            set(state => ({
+
+                owners: [
+                    ...state.owners,
+                    created
+                ]
+
+            }));
+
+
+            return created;
+
+        },
+
+
+
+        updateOwner: async (
+            id,
+            changes
+        ) => {
+
+            const updated =
+                await apiUpdateOwner(
+                    id,
+                    changes
+                );
+
+
+            set(state => ({
+
+                owners:
+                    state.owners.map(
+                        owner =>
+                            owner.id === id
+                            ? updated
+                            : owner
+                    )
+
+            }));
+
+
+            return updated;
+
+        },
+
+
+
+        deleteOwner: async (
+            id
+        ) => {
+
+            await apiDeleteOwner(
+                id
+            );
+
+
+            set(state => ({
+
+                owners:
+                    state.owners.filter(
+                        owner =>
+                            owner.id !== id
+                    )
+
+            }));
+
+
+            return true;
+
+        }
+
+    }));

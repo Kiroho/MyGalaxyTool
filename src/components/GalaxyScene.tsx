@@ -6,8 +6,6 @@ import CoordinateSystem from "./CoordinateSystem";
 import CoordinateLabels from "./CoordinateLabels";
 
 import { usePlanetStore } from "../store/planetStore";
-
-import { getOwners } from "../services/OwnerService";
 import { useOwnerStore } from "../store/ownerStore";
 
 import { useUIStore } from "../store/uiStore";
@@ -15,11 +13,6 @@ import Sensor from "./Sensor";
 
 
 export default function GalaxyScene(){
-
-    const setOwners = useOwnerStore(
-    state => state.setOwners
-    );
-
 
     const planets = usePlanetStore(
         state => state.planets
@@ -30,17 +23,30 @@ export default function GalaxyScene(){
         state => state.showSensors
     );
 
+
     const selectedOwnerIds = useUIStore(
         state => state.selectedOwnerIds
     );
 
 
-    useEffect(()=>{
+    const loadOwners = useOwnerStore(
+        state => state.loadOwners
+    );
 
-        getOwners()
-            .then(setOwners);
+    const loadPlanets = usePlanetStore(
+        state => state.loadPlanets
+    );
 
-    }, [setOwners]);
+
+    useEffect(() => {
+
+        loadOwners();
+        loadPlanets();
+
+    }, [
+        loadOwners,
+        loadPlanets
+    ]);
 
 
     const clearSelection = usePlanetStore(
@@ -79,11 +85,7 @@ export default function GalaxyScene(){
 
             {
                 planets
-                .filter(planet =>
-                    selectedOwnerIds.includes(
-                        planet.owner_id
-                    )
-                )
+                .filter(planet => selectedOwnerIds.includes( planet.owner_id ))
                 .map((planet)=>(
 
                     <group key={planet.id}>

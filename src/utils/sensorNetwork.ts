@@ -105,6 +105,8 @@ Runde 5:
 
 */
 
+
+
 for(
 let round = 0;
 round <= maxRounds;
@@ -164,9 +166,15 @@ radius
 
 };
 
+
 let score = 0;
 
 let invalid = false;
+
+
+
+
+
 
 for(
 const planet of planets
@@ -210,6 +218,10 @@ invalid = true;
 break;
 
 }
+
+
+
+
 
 /*
 Je näher an der Grenze,
@@ -263,16 +275,8 @@ Diese Runde war erfolgreich
 */
 
 if(bestPoint && bestPoint.x > 0 && bestPoint.y > 0 && bestPoint.z > 0){
-/*
-console.log(
-"Sensorposition gefunden:",
-bestPoint,
-"Runde:",
-round
-);
-*/
 
-return bestPoint;
+    return bestPoint;
 
 }
 

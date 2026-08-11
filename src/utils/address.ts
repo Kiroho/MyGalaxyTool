@@ -34,16 +34,17 @@ export function isValidAddress(
 ): boolean {
 
 
-    const parts = address.split(".");
+    //const parts = address.split(".").pop;
+    const parts = address.split(".").slice(0, -1);
 
-
-    // genau 6 Werte erforderlich
-    if(parts.length !== 6)
+    // genau 6 Werte erforderlich (Der letzte Wert wird aktuell abgeschnitten)
+    if(parts.length !== 5)
         return false;
 
 
 
     const values = parts.map(Number);
+    
 
 
 
@@ -75,7 +76,7 @@ export function isValidAddress(
 
 
     if(
-        uniqueValues.size !== 6
+        uniqueValues.size !== 5
     )
         return false;
 
