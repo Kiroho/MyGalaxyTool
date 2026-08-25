@@ -171,19 +171,36 @@ export default function OwnerWindow() {
                                 />
 
 
-                                <span
 
+                                <div
                                     style={{
-
-                                        flex:1
-
+                                        flex:1,
+                                        display:"flex",
+                                        alignItems:"center"
                                     }}
-
                                 >
 
-                                    {owner.name}
+                                    <span
+                                        style={{
+                                            width:"120px"
+                                        }}
+                                    >
+                                        {owner.name}
+                                    </span>
 
-                                </span>
+                                    <span
+                                        style={{
+                                            width:"90px",
+                                            fontSize:"16px",
+                                            opacity:0.8
+                                        }}
+                                    >
+                                        {owner.volk}
+                                    </span>
+
+                                </div>
+
+
 
 
                                 <div

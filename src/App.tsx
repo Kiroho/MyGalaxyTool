@@ -8,11 +8,16 @@ import CreatePlanet from "./components/ui/windows/CreatePlanet";
 import SensorButton from "./components/ui/SensorButton";
 import PlanetList from "./components/ui/windows/PlanetList";
 import FlightTimeWindow from "./components/ui/windows/FlightTimeWindow";
+import BuildingWindow from "./components/ui/windows/BuildingWindow";
 import SensorNetworkGeneratorWindow from "./components/ui/windows/SensorNetworkGeneratorWindow";
 import { useUIStore } from "./store/uiStore";
 import { useState, useEffect } from "react";
 import LoginPage from "./components/ui/windows/LoginPage";
 import { checkAuth, validateSession } from "./utils/auth";
+import FleetWindow from "./components/ui/windows/FleetWindow";
+import UserMenuButton from "./components/ui/UserMenuButton";
+import UserSettingsWindow from "./components/ui/windows/UserSettingsWindow";
+
 
 function App(){
     
@@ -38,17 +43,9 @@ function App(){
 
       async function init() {
 
-          console.log("APP INIT");
-
 
           const result =
               await checkAuth();
-
-
-          console.log(
-              "AUTH RESULT:",
-              result
-          );
 
 
           setLoggedIn(result);
@@ -140,6 +137,16 @@ function App(){
       <Menu />
       <SensorButton />
 
+      <UserMenuButton
+        onLogout={() => {
+            setLoggedIn(false);
+        }}
+      />
+      <UserSettingsWindow
+        onLogout={() => {
+            setLoggedIn(false);
+        }} />
+
       <CreatePlanet
           key={
               presetPosition
@@ -153,6 +160,8 @@ function App(){
       <OwnerWindow />
       <PlanetList />
       <FlightTimeWindow />
+      <FleetWindow />
+      <BuildingWindow />
       <SensorNetworkGeneratorWindow />
     </>
 

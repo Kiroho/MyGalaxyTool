@@ -1,0 +1,115 @@
+{
+    "T1": {
+        "Tau'ri": {
+            "attack": 50,
+            "buildingAttack": 10
+        },
+        "Goa'uld": {
+            "attack": 50,
+            "buildingAttack": 10
+        },
+        "Wraith": {
+            "attack": 50,
+            "buildingAttack": 10
+        },
+        "Replikator": {
+            "attack": 50,
+            "buildingAttack": 10
+        }
+    },
+
+    "T2": {
+        "Tau'ri": {
+            "attack": 80,
+            "buildingAttack": 30
+        },
+        "Goa'uld": {
+            "attack": 100,
+            "buildingAttack": 30
+        },
+        "Wraith": {
+            "attack": 95,
+            "buildingAttack": 30
+        },
+        "Replikator": {
+            "attack": 75,
+            "buildingAttack": 33
+        }
+    },
+
+    "T3": {
+        "Tau'ri": {
+            "attack": 180,
+            "buildingAttack": 50
+        },
+        "Goa'uld": {
+            "attack": 170,
+            "buildingAttack": 50
+        },
+        "Wraith": {
+            "attack": 180,
+            "buildingAttack": 50
+        },
+        "Replikator": {
+            "attack": 150,
+            "buildingAttack": 55
+        }
+    },
+
+    "S1": {
+        "Tau'ri": {
+            "attack": 2550,
+            "buildingAttack": 500
+        },
+        "Goa'uld": {
+            "attack": 2700,
+            "buildingAttack": 500
+        },
+        "Wraith": {
+            "attack": 2850,
+            "buildingAttack": 500
+        },
+        "Replikator": {
+            "attack": 3000,
+            "buildingAttack": 550
+        }
+    },
+
+    "S2": {
+        "Tau'ri": {
+            "attack": 65000,
+            "buildingAttack": 10000
+        },
+        "Goa'uld": {
+            "attack": 70000,
+            "buildingAttack": 10000
+        },
+        "Wraith": {
+            "attack": 100000,
+            "buildingAttack": 10000
+        },
+        "Replikator": {
+            "attack": 85000,
+            "buildingAttack": 11000
+        }
+    },
+
+    "S3": {
+        "Tau'ri": {
+            "attack": 250000,
+            "buildingAttack": 50000
+        },
+        "Goa'uld": {
+            "attack": 240000,
+            "buildingAttack": 50000
+        },
+        "Wraith": {
+            "attack": 280000,
+            "buildingAttack": 50000
+        },
+        "Replikator": {
+            "attack": 270000,
+            "buildingAttack": 55000
+        }
+    }
+}

@@ -30,6 +30,12 @@ type UIStore = {
 
     sensorNetworkWindow: WindowState;
 
+    buildingWindow: WindowState;
+
+    fleetWindow: WindowState;
+
+    userSettingsWindow: WindowState;
+
 
 
     toggleMenu: () => void;
@@ -65,6 +71,15 @@ type UIStore = {
     openSensorNetworkWindow: () => void;
     closeSensorNetworkWindow: () => void;
 
+    openBuildingWindow: () => void;
+    closeBuildingWindow: () => void;
+
+    openFleetWindow: () => void;
+    closeFleetWindow: () => void;
+
+    openUserSettingsWindow: () => void;
+    closeUserSettingsWindow: () => void;
+
 };
 
 
@@ -96,6 +111,19 @@ export const useUIStore = create<UIStore>((set)=>({
 
     sensorNetworkWindow:{
         open:false
+    },
+
+    buildingWindow: {
+        open: false
+    },
+
+
+    fleetWindow: {
+        open: false
+    },
+
+    userSettingsWindow: {
+        open: false
     },
 
     
@@ -233,6 +261,68 @@ export const useUIStore = create<UIStore>((set)=>({
             }
         });
     },
+
+    openBuildingWindow: () =>
+    set({
+        buildingWindow: {
+            open: true
+        }
+    }),
+
+
+    closeBuildingWindow: () =>
+        set({
+            buildingWindow: {
+                open: false
+            }
+        }),
+
+        
+    openFleetWindow: () => {
+
+        set({
+
+            fleetWindow: {
+                open: true
+            }
+
+        });
+
+    },
+
+
+    closeFleetWindow: () => {
+
+        set({
+
+            fleetWindow: {
+                open: false
+            }
+
+        });
+
+    },
+
+
+    openUserSettingsWindow: () =>
+        set(state => ({
+
+            userSettingsWindow: {
+                ...state.userSettingsWindow,
+                open: true
+            }
+
+        })),
+
+    closeUserSettingsWindow: () =>
+        set(state => ({
+
+            userSettingsWindow: {
+                ...state.userSettingsWindow,
+                open: false
+            }
+
+        })),
 
 
 

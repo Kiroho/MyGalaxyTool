@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useOwnerStore } from "../../../store/ownerStore";
+import { volkList, type Volk } from "../../../types/owner";
 
 
 type Props = {
@@ -24,6 +25,9 @@ export default function OwnerCreateForm({
     const [color,setColor] = useState(
         "#ffffff"
     );
+
+    const [volk, setVolk] =
+        useState<Volk>("Tau'ri");
 
 
 
@@ -179,6 +183,68 @@ export default function OwnerCreateForm({
 
 
 
+
+            <div
+                style={{
+                    display:"flex",
+                    alignItems:"center",
+                    marginBottom:"20px"
+                }}
+            >
+
+                <label
+                    style={{
+                        width:"80px"
+                    }}
+                >
+                    Volk:
+                </label>
+
+
+                <select
+
+                    style={{
+                        flex:1,
+                        padding:"5px"
+                    }}
+
+                    value={volk}
+
+                    onChange={(event) => {
+
+                        setVolk(
+                            event.target.value as Volk
+                        );
+
+                    }}
+
+                >
+
+                    {
+                        volkList.map(
+                            volk => (
+
+                                <option
+                                    key={volk}
+                                    value={volk}
+                                >
+                                    {volk}
+                                </option>
+
+                            )
+                        )
+                    }
+
+                </select>
+
+            </div>
+
+
+
+
+
+
+
             <div
 
                 style={{
@@ -219,7 +285,9 @@ export default function OwnerCreateForm({
 
                             name:name.trim(),
 
-                            color
+                            color,
+
+                            volk
 
                         });
 

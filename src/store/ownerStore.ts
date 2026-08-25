@@ -56,20 +56,8 @@ export const useOwnerStore =
 
         loadOwners: async () => {
 
-            console.log(
-                "Lade Besitzer aus API..."
-            );
-
-
             const owners =
                 await getOwners();
-
-
-            console.log(
-                "Besitzer von API:",
-                owners
-            );
-
 
             set({
                 owners

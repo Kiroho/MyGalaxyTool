@@ -1,0 +1,47 @@
+[
+  {
+    "id": "hauptgebaeude",
+    "name": "Hauptgebäude",
+    "maxLevel": 30
+  },
+  {
+    "id": "mine_1",
+    "name": "Mine 1",
+    "maxLevel": 30
+  },
+  {
+    "id": "mine_2",
+    "name": "Mine 2",
+    "maxLevel": 30
+  },
+  {
+    "id": "mine_3",
+    "name": "Mine 3",
+    "maxLevel": 30
+  },
+  {
+    "id": "forschung",
+    "name": "Forschungsgebäude",
+    "maxLevel": 25
+  },
+  {
+    "id": "ausbildungslager",
+    "name": "Ausbildungslager",
+    "maxLevel": 25
+  },
+  {
+    "id": "raumschiffwerft",
+    "name": "Raumschiffwerft",
+    "maxLevel": 25
+  },
+  {
+    "id": "sensorphalax",
+    "name": "Sensorphalax",
+    "maxLevel": 20
+  },
+  {
+    "id": "handelsposten",
+    "name": "Handelsposten",
+    "maxLevel": 10
+  }
+]

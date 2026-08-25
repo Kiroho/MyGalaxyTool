@@ -13,7 +13,6 @@ export default function Menu() {
         state => state.openOwnerWindow
     );
 
-
     const openCreatePlanetWindow = useUIStore(
         state => state.openCreatePlanetWindow
     );
@@ -25,6 +24,15 @@ export default function Menu() {
     const openFlightTimeWindow = useUIStore(
         state => state.openFlightTimeWindow
     );
+
+    const openBuildingWindow = useUIStore(
+        state => state.openBuildingWindow
+    );
+
+    const openFleetWindow =
+        useUIStore(
+            state => state.openFleetWindow
+        );
 
     const openSensorNetworkWindow =
         useUIStore(
@@ -254,7 +262,74 @@ export default function Menu() {
 
                 🚀 Flugzeitrechner
 
-            </button>            
+            </button>     
+
+
+            <button
+
+                style={{
+
+                    width:"100%",
+                    padding:"10px",
+                    cursor:"pointer",
+                    background:"transparent",
+                    color:"white",
+                    border:"none",
+                    textAlign:"left"
+
+                }}
+
+                onClick={()=>{
+
+                    openFleetWindow();
+
+                    closeMenu();
+
+                }}
+
+            >
+
+                🛰️ Flottenübersicht
+
+            </button>
+
+
+
+            <button
+
+                style={{
+
+                    width:"100%",
+
+                    padding:"10px",
+
+                    cursor:"pointer",
+
+                    background:"transparent",
+
+                    color:"white",
+
+                    border:"none",
+
+                    textAlign:"left"
+
+                }}
+
+
+                onClick={()=>{
+
+                    openBuildingWindow();
+
+                    closeMenu();
+
+                }}
+
+            >
+
+                🏭 Gebäuderechner
+
+            </button>
+
 
             <button
 

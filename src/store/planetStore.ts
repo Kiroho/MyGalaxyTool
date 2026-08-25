@@ -142,10 +142,6 @@ export const usePlanetStore = create<PlanetStore>((set)=>({
               planet
           );
 
-              console.log(
-        "Erstellter Planet:",
-        created
-    );
 
       set((state)=>({
 
@@ -195,15 +191,8 @@ export const usePlanetStore = create<PlanetStore>((set)=>({
     
 loadPlanets: async () => {
 
-    console.log("Lade Planeten aus API...");
-
     const planets =
         await getPlanets();
-
-    console.log(
-        "Planeten von API:",
-        planets
-    );
 
     set({
         planets

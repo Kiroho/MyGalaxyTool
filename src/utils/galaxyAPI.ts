@@ -6,6 +6,8 @@ import type { Owner } from "../types/owner";
 
 
 
+
+
 export function apiUrl(
     path: string
 ){
@@ -15,6 +17,7 @@ export function apiUrl(
     );
 
 }
+    
 
 
 
@@ -382,8 +385,264 @@ export async function deleteOwner(
 
 
 
+//Fleet -----------------------------------------------------------------------------------
 
 
+export async function getFleet(
+    ownerId: string
+){
 
+    const response =
+        await galaxyFetch(
+
+            "/wp-json/galaxy/v1/fleets/" +
+            ownerId
+
+        );
+
+
+    if(!response.ok){
+
+        throw new Error(
+            "Flotte konnte nicht geladen werden"
+        );
+
+    }
+
+
+    return await response.json();
+
+}
+
+
+export async function createFleet(
+    ownerId: string
+){
+
+    const response =
+        await galaxyFetch(
+
+            "/wp-json/galaxy/v1/fleets",
+
+            {
+                method:"POST",
+
+                body:
+                    JSON.stringify({
+
+                        owner_id:
+                            ownerId
+
+                    })
+
+            }
+
+        );
+
+
+    if(!response.ok){
+
+        throw new Error(
+            "Flotte konnte nicht erstellt werden"
+        );
+
+    }
+
+
+    return await response.json();
+
+}
+
+
+export async function updateFleet(
+    ownerId: string,
+    data: Record<string, number>
+){
+
+    const response =
+        await galaxyFetch(
+
+            "/wp-json/galaxy/v1/fleets/" +
+            ownerId,
+
+            {
+                method:"PUT",
+
+                body:
+                    JSON.stringify(data)
+
+            }
+
+        );
+
+
+    if(!response.ok){
+
+        throw new Error(
+            "Flotte konnte nicht aktualisiert werden"
+        );
+
+    }
+
+
+    return await response.json();
+
+}
+
+
+//Benutzer -----------------------------------------------------------------------------------
+
+
+export async function updateUsername(
+    username: string
+) {
+
+    const token =
+        localStorage.getItem(
+            "galaxy_token"
+        );
+
+
+    if(!token){
+
+        throw new Error(
+            "Keine gültige Sitzung vorhanden."
+        );
+
+    }
+
+
+    const response =
+        await fetch(
+
+            apiUrl(
+                "/wp-json/galaxy/v1/user/update-username"
+            ),
+
+            {
+
+                method:"POST",
+
+                headers:{
+
+                    "Content-Type":
+                        "application/json",
+
+                    "Authorization":
+                        "Bearer " + token
+
+                },
+
+                body:
+                    JSON.stringify({
+
+                        username
+
+                    })
+
+            }
+
+        );
+
+
+    const data =
+        await response.json();
+
+
+    if(!response.ok){
+
+        throw new Error(
+
+            data.message
+            ||
+            "Benutzername konnte nicht geändert werden."
+
+        );
+
+    }
+
+
+    return data;
+
+}
+
+
+export async function updatePassword(
+    currentPassword: string,
+    newPassword: string
+) {
+
+    const token =
+        localStorage.getItem(
+            "galaxy_token"
+        );
+
+
+    if(!token){
+
+        throw new Error(
+            "Keine gültige Sitzung vorhanden."
+        );
+
+    }
+
+
+    const response =
+        await fetch(
+
+            apiUrl(
+                "/wp-json/galaxy/v1/user/update-password"
+            ),
+
+            {
+
+                method:"POST",
+
+                headers:{
+
+                    "Content-Type":
+                        "application/json",
+
+                    "Authorization":
+                        "Bearer " + token
+
+                },
+
+                body:
+                    JSON.stringify({
+
+                        current_password:
+                            currentPassword,
+
+                        new_password:
+                            newPassword
+
+                    })
+
+            }
+
+        );
+
+
+    const data =
+        await response.json();
+
+
+    if(!response.ok){
+
+        throw new Error(
+
+            data.message
+            ||
+            "Passwort konnte nicht geändert werden."
+
+        );
+
+    }
+
+
+    return data;
+
+}
 
 

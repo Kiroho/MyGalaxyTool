@@ -117,12 +117,6 @@ const minimumDistance =
 radius *
 (1 - round * relaxationStep);
 
-console.log(
-"Sensor Suche Runde:",
-round,
-"Mindestabstand:",
-minimumDistance
-);
 
 let bestPoint:Point3D | null = null;
 

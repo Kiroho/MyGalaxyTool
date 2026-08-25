@@ -93,20 +93,10 @@ export async function checkAuth(){
     const token =
         getToken();
 
-    console.log(
-        "Galaxy Token:",
-        token
-    );
-
     if(
         !token
     ){
-        console.log(
-            "Kein Token"
-        );
-
         return false;
-
     }
 
 
@@ -128,18 +118,10 @@ export async function checkAuth(){
             }
         );
 
-    console.log(
-        "Galaxy /me Status:",
-        response.status
-    );
 
     if(
         !response.ok
     ){
-
-        console.log(
-            "Session ungültig - Logout"
-        );
 
         logout();
 
