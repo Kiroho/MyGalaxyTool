@@ -5,9 +5,7 @@ import type { Owner } from "../types/owner";
 
 
 
-
-
-
+//Live
 export function apiUrl(
     path: string
 ){
@@ -136,6 +134,26 @@ export async function getPlanets(): Promise<Planet[]> {
 }
 
 
+export async function getPlanet(
+    id: string
+): Promise<Planet> {
+
+    const response =
+        await galaxyFetch(
+            "/wp-json/galaxy/v1/planets/" + id
+        );
+
+    if(!response.ok){
+
+        throw new Error(
+            "Planet konnte nicht geladen werden"
+        );
+
+    }
+
+    return await response.json();
+
+}
 
 
 

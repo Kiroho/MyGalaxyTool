@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { Planet } from "../types/planet";
 import {
+    getPlanet,
     getPlanets,
     createPlanet,
     updatePlanet as apiUpdatePlanet,
@@ -21,6 +22,8 @@ type PlanetStore = {
   // Daten laden
   setPlanets: (planets: Planet[]) => void;
 
+  // Einzelnen Planet refreshen
+  refreshPlanet: (id: string) => Promise<void>;
 
   // Auswahl
   selectPlanet: (planet: Planet) => void;
@@ -61,33 +64,61 @@ type PlanetStore = {
 
 export const usePlanetStore = create<PlanetStore>((set)=>({
 
-  planets: [],
+    planets: [],
 
-  selectedPlanet: null,
+    selectedPlanet: null,
 
 
-  setPlanets: (planets) =>
+    setPlanets: (planets) =>
     set({
-      planets
+        planets
+    }),
+
+
+    refreshPlanet: async (id) => {
+
+        const planet =
+            await getPlanet(id);
+
+        set((state) => ({
+
+            planets:
+                state.planets.map(
+                    existingPlanet =>
+                        existingPlanet.id === id
+                        ?
+                        planet
+                        :
+                        existingPlanet
+                ),
+
+            selectedPlanet:
+                state.selectedPlanet?.id === id
+                ?
+                planet
+                :
+                state.selectedPlanet
+
+        }));
+
+    },
+
+
+    selectPlanet: (planet) =>
+    set({
+        selectedPlanet: planet,
+        previewPlanet:null
     }),
 
 
 
-  selectPlanet: (planet) =>
+    clearSelection: () =>
     set({
-      selectedPlanet: planet,
-      previewPlanet:null
+        selectedPlanet: null,
+        previewPlanet:null
     }),
 
 
-
-  clearSelection: () =>
-    set({
-      selectedPlanet: null,
-      previewPlanet:null
-    }),
-
-    
     previewPlanet: null,
 
     setPreviewPlanet:(planet)=>
@@ -96,109 +127,110 @@ export const usePlanetStore = create<PlanetStore>((set)=>({
     }),
 
 
+    updatePlanet: async (
+        id,
+        data
+    )=>{
+
+        // const start =
+        //     performance.now();
+
+        const updated =
+            await apiUpdatePlanet(
+                id,
+                data
+            );
+
+        // console.log(
+        //     "Planet PUT Dauer:",
+        //     performance.now() - start,
+        //     "ms"
+        // );
+
+        set((state)=>({
+            planets:
+                state.planets.map(
+                    planet =>
+                        planet.id === id
+                        ?
+                        updated
+                        :
+                        planet
+                ),
+
+
+            selectedPlanet:
+                state.selectedPlanet?.id === id
+                ?
+                updated
+                :
+                state.selectedPlanet
+        }));
+        return updated;
+
+    },
+
+
+    addPlanet: async (planet)=>{
+
+        const created =
+            await createPlanet(
+                planet
+            );
+
+
+        set((state)=>({
+
+            planets:[
+                ...state.planets,
+                created
+            ]
+
+        }));
+        return created;
+
+    },
+
+
+    deletePlanet: async (
+        id
+    )=>{
+        await apiDeletePlanet(
+            id
+        );
+
+
+        set((state)=>({
+
+            planets:
+                state.planets.filter(
+                    planet =>
+                        planet.id !== id
+                ),
+
+
+            selectedPlanet:
+                state.selectedPlanet?.id === id
+                ?
+                null
+                :
+                state.selectedPlanet
+
+        }));
+
+    },
 
     
+    loadPlanets: async () => {
 
-  updatePlanet: async (
-      id,
-      data
-  )=>{
+        const planets =
+            await getPlanets();
 
-      const updated =
-          await apiUpdatePlanet(
-              id,
-              data
-          );
+        set({
+            planets
+        });
 
-      set((state)=>({
-          planets:
-              state.planets.map(
-                  planet =>
-                      planet.id === id
-                      ?
-                      updated
-                      :
-                      planet
-              ),
-
-
-          selectedPlanet:
-              state.selectedPlanet?.id === id
-              ?
-              updated
-              :
-              state.selectedPlanet
-      }));
-      return updated;
-
-  },
-
-
-
-  addPlanet: async (planet)=>{
-
-      const created =
-          await createPlanet(
-              planet
-          );
-
-
-      set((state)=>({
-
-          planets:[
-              ...state.planets,
-              created
-          ]
-
-      }));
-      return created;
-
-  },
-
-
-
-  deletePlanet: async (
-      id
-  )=>{
-      await apiDeletePlanet(
-          id
-      );
-
-
-      set((state)=>({
-
-          planets:
-              state.planets.filter(
-                  planet =>
-                      planet.id !== id
-              ),
-
-
-          selectedPlanet:
-              state.selectedPlanet?.id === id
-              ?
-              null
-              :
-              state.selectedPlanet
-
-      }));
-
-  },
-
-
-
-
-    
-loadPlanets: async () => {
-
-    const planets =
-        await getPlanets();
-
-    set({
-        planets
-    });
-
-},
+    },
 
 
 }));

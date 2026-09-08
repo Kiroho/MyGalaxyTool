@@ -17,6 +17,7 @@ import { checkAuth, validateSession } from "./utils/auth";
 import FleetWindow from "./components/ui/windows/FleetWindow";
 import UserMenuButton from "./components/ui/UserMenuButton";
 import UserSettingsWindow from "./components/ui/windows/UserSettingsWindow";
+import { connectGalaxyEvents, disconnectGalaxyEvents } from "./utils/galaxyEvents";
 
 
 function App(){
@@ -98,6 +99,69 @@ function App(){
 
 
   },[]);
+
+
+  useEffect(() => {
+
+      if(!loggedIn){
+
+          disconnectGalaxyEvents();
+
+          return;
+
+      }
+
+      const refreshPlanet =
+          usePlanetStore.getState().refreshPlanet;
+
+      connectGalaxyEvents(
+          (event) => {
+
+              try {
+
+                  const payload =
+                      JSON.parse(event.data);
+
+                  console.log(
+                      "Galaxy SSE:",
+                      payload
+                  );
+
+                  if(
+                      payload.event_type ===
+                      "planet_updated"
+                  ){
+
+                      const id =
+                          payload.data?.id;
+
+                      if(id){
+
+                          refreshPlanet(id);
+
+                      }
+
+                  }
+
+              } catch(error) {
+
+                  console.error(
+                      "SSE Event konnte nicht verarbeitet werden:",
+                      error
+                  );
+
+              }
+
+          }
+      );
+
+      return () => {
+
+          disconnectGalaxyEvents();
+
+      };
+
+  }, [loggedIn]);
 
 
 

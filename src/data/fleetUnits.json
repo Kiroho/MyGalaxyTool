@@ -28,11 +28,11 @@
             "buildingAttack": 30
         },
         "Wraith": {
-            "attack": 95,
+            "attack": 90,
             "buildingAttack": 30
         },
         "Replikator": {
-            "attack": 75,
+            "attack": 70,
             "buildingAttack": 33
         }
     },
@@ -43,30 +43,30 @@
             "buildingAttack": 50
         },
         "Goa'uld": {
-            "attack": 170,
+            "attack": 200,
             "buildingAttack": 50
         },
         "Wraith": {
-            "attack": 180,
+            "attack": 160,
             "buildingAttack": 50
         },
         "Replikator": {
-            "attack": 150,
+            "attack": 140,
             "buildingAttack": 55
         }
     },
 
     "S1": {
         "Tau'ri": {
-            "attack": 2550,
+            "attack": 2400,
             "buildingAttack": 500
         },
         "Goa'uld": {
-            "attack": 2700,
+            "attack": 2100,
             "buildingAttack": 500
         },
         "Wraith": {
-            "attack": 2850,
+            "attack": 2700,
             "buildingAttack": 500
         },
         "Replikator": {
@@ -77,19 +77,19 @@
 
     "S2": {
         "Tau'ri": {
-            "attack": 65000,
-            "buildingAttack": 10000
-        },
-        "Goa'uld": {
-            "attack": 70000,
-            "buildingAttack": 10000
-        },
-        "Wraith": {
             "attack": 100000,
             "buildingAttack": 10000
         },
+        "Goa'uld": {
+            "attack": 80000,
+            "buildingAttack": 10000
+        },
+        "Wraith": {
+            "attack": 60000,
+            "buildingAttack": 10000
+        },
         "Replikator": {
-            "attack": 85000,
+            "attack": 55000,
             "buildingAttack": 11000
         }
     },
@@ -100,15 +100,15 @@
             "buildingAttack": 50000
         },
         "Goa'uld": {
-            "attack": 240000,
+            "attack": 230000,
             "buildingAttack": 50000
         },
         "Wraith": {
-            "attack": 280000,
+            "attack": 200000,
             "buildingAttack": 50000
         },
         "Replikator": {
-            "attack": 270000,
+            "attack": 225000,
             "buildingAttack": 55000
         }
     }
