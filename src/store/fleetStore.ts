@@ -57,11 +57,14 @@ type FleetStore = {
         changes: FleetChanges
     ) => Promise<Fleet>;
 
+    //Für Live Update
+    refreshFleet: (ownerId: string) => Promise<Fleet>;
+
 };
 
 
 export const useFleetStore =
-    create<FleetStore>((set) => ({
+    create<FleetStore>((set, get) => ({
 
         fleets: {},
 
@@ -270,6 +273,17 @@ export const useFleetStore =
 
             return normalizedFleet;
 
-        }
+        },
+
+        refreshFleet: async (
+            ownerId
+        ) => {
+
+            return await get().loadFleet(
+                ownerId
+            );
+
+        },
+
 
     }));

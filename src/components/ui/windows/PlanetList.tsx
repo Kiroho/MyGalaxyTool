@@ -69,27 +69,97 @@ export default function PlanetList(){
 
 
 
+    const knownOwnerIds =
+        useRef<string[]>([]);
+
+
     useEffect(()=>{
 
-        if(
-            !initializedFilter.current &&
-            owners.length > 0
-        ){
+        if(owners.length === 0){
+            return;
+        }
 
-            setSelectedOwnerIds(
-                owners.map(owner => owner.id)
+
+        const currentOwnerIds =
+            owners.map(
+                owner => owner.id
             );
 
 
+        if(!initializedFilter.current){
+
+            setSelectedOwnerIds(
+                currentOwnerIds
+            );
+
+            knownOwnerIds.current =
+                currentOwnerIds;
+
             initializedFilter.current = true;
 
+            return;
+
         }
+
+
+        const previousOwnerIds =
+            knownOwnerIds.current;
+
+
+        const newOwnerIds =
+            currentOwnerIds.filter(
+                id =>
+                    !previousOwnerIds.includes(id)
+            );
+
+
+        const removedOwnerIds =
+            previousOwnerIds.filter(
+                id =>
+                    !currentOwnerIds.includes(id)
+            );
+
+
+        if(
+            newOwnerIds.length > 0 ||
+            removedOwnerIds.length > 0
+        ){
+
+            setSelectedOwnerIds(
+                selectedOwnerIds => {
+
+                    const withoutRemoved =
+                        selectedOwnerIds.filter(
+                            id =>
+                                !removedOwnerIds.includes(id)
+                        );
+
+
+                    const withNew =
+                        [
+                            ...withoutRemoved,
+                            ...newOwnerIds
+                        ];
+
+
+                    return [
+                        ...new Set(withNew)
+                    ];
+
+                }
+            );
+
+        }
+
+
+        knownOwnerIds.current =
+            currentOwnerIds;
+
 
     },[
         owners,
         setSelectedOwnerIds
     ]);
-
 
 
 

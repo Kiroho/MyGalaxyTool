@@ -37,6 +37,14 @@ type OwnerStore = {
         id: string
     ) => Promise<boolean>;
 
+
+    //Für Live Updates
+    refreshOwners: () => Promise<void>;
+
+    addOwnerFromServer: (owner: Owner) => void;
+
+    removeOwnerFromServer: (id: string) => void;
+
 };
 
 
@@ -146,6 +154,60 @@ export const useOwnerStore =
 
             return true;
 
-        }
+        },
+
+
+        refreshOwners: async () => {
+
+            const owners =
+                await getOwners();
+
+            set({
+                owners
+            });
+
+        },
+
+
+
+        addOwnerFromServer: (owner) =>
+            set(state => {
+
+                if(
+                    state.owners.some(
+                        existingOwner =>
+                            existingOwner.id === owner.id
+                    )
+                ){
+
+                    return state;
+
+                }
+
+                return {
+
+                    owners: [
+                        ...state.owners,
+                        owner
+                    ]
+
+                };
+
+            }),
+
+            
+
+        removeOwnerFromServer: (id) =>
+            set(state => ({
+
+                owners:
+                    state.owners.filter(
+                        owner =>
+                            owner.id !== id
+                    )
+
+            })),
+
+
 
     }));

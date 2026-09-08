@@ -58,6 +58,10 @@ type PlanetStore = {
 
   loadPlanets: () => Promise<void>;
 
+// Planeten Setzen und Löschen via live update
+addPlanetFromServer: (planet: Planet) => void;
+removePlanetFromServer: (id: string) => void;
+
 
 };
 
@@ -231,6 +235,43 @@ export const usePlanetStore = create<PlanetStore>((set)=>({
         });
 
     },
+
+    addPlanetFromServer: (planet) =>
+        set((state) => {
+
+            if(
+                state.planets.some(
+                    existingPlanet =>
+                        existingPlanet.id === planet.id
+                )
+            ){
+                return state;
+            }
+
+            return {
+                planets: [
+                    ...state.planets,
+                    planet
+                ]
+            };
+
+        }),
+
+    removePlanetFromServer: (id) =>
+        set((state) => ({
+            planets:
+                state.planets.filter(
+                    planet =>
+                        planet.id !== id
+                ),
+
+            selectedPlanet:
+                state.selectedPlanet?.id === id
+                ?
+                null
+                :
+                state.selectedPlanet
+        })),
 
 
 }));

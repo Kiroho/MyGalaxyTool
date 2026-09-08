@@ -18,6 +18,9 @@ import FleetWindow from "./components/ui/windows/FleetWindow";
 import UserMenuButton from "./components/ui/UserMenuButton";
 import UserSettingsWindow from "./components/ui/windows/UserSettingsWindow";
 import { connectGalaxyEvents, disconnectGalaxyEvents } from "./utils/galaxyEvents";
+import { getPlanet } from "./utils/galaxyAPI";
+import { useOwnerStore } from "./store/ownerStore";
+import { useFleetStore } from "./store/fleetStore";
 
 
 function App(){
@@ -101,67 +104,223 @@ function App(){
   },[]);
 
 
-  useEffect(() => {
+    useEffect(() => {
 
-      if(!loggedIn){
+        if(!loggedIn){
 
-          disconnectGalaxyEvents();
+            disconnectGalaxyEvents();
 
-          return;
+            return;
 
-      }
+        }
 
-      const refreshPlanet =
-          usePlanetStore.getState().refreshPlanet;
+        const refreshPlanet =
+            usePlanetStore.getState().refreshPlanet;
 
-      connectGalaxyEvents(
-          (event) => {
+        const addPlanetFromServer =
+            usePlanetStore.getState().addPlanetFromServer;
 
-              try {
+        const removePlanetFromServer =
+            usePlanetStore.getState().removePlanetFromServer;
 
-                  const payload =
-                      JSON.parse(event.data);
+        const refreshOwners =
+            useOwnerStore.getState().refreshOwners;
 
-                  console.log(
-                      "Galaxy SSE:",
-                      payload
-                  );
+        const refreshFleet =
+            useFleetStore.getState().refreshFleet;
 
-                  if(
-                      payload.event_type ===
-                      "planet_updated"
-                  ){
 
-                      const id =
-                          payload.data?.id;
+        connectGalaxyEvents(
+            (event) => {
 
-                      if(id){
+                try {
 
-                          refreshPlanet(id);
+                    const payload =
+                        JSON.parse(event.data);
 
-                      }
+                    console.log(
+                        "Galaxy SSE:",
+                        payload
+                    );
 
-                  }
 
-              } catch(error) {
+                    const id =
+                        payload.data?.id;
 
-                  console.error(
-                      "SSE Event konnte nicht verarbeitet werden:",
-                      error
-                  );
 
-              }
+                    if(
+                        payload.event_type ===
+                        "planet_created"
+                    ){
 
-          }
-      );
+                        if(!id){
+                            return;
+                        }
 
-      return () => {
+                        getPlanet(id)
+                            .then(
+                                (planet) => {
 
-          disconnectGalaxyEvents();
+                                    addPlanetFromServer(
+                                        planet
+                                    );
 
-      };
+                                }
+                            )
+                            .catch(
+                                (error) => {
 
-  }, [loggedIn]);
+                                    console.error(
+                                        "Neuer Planet konnte nicht geladen werden:",
+                                        error
+                                    );
+
+                                }
+                            );
+
+                    }
+
+
+                    if(
+                        payload.event_type ===
+                        "planet_updated"
+                    ){
+
+                        if(!id){
+                            return;
+                        }
+
+                        refreshPlanet(id);
+
+                    }
+
+
+                    if(
+                        payload.event_type ===
+                        "planet_deleted"
+                    ){
+
+                        if(!id){
+                            return;
+                        }
+
+                        removePlanetFromServer(
+                            id
+                        );
+
+                    }
+
+
+                    if(
+                        payload.event_type ===
+                        "owner_created"
+                    ){
+
+                        refreshOwners()
+                            .catch(
+                                (error) => {
+
+                                    console.error(
+                                        "Owner-Liste konnte nach Erstellung nicht aktualisiert werden:",
+                                        error
+                                    );
+
+                                }
+                            );
+
+                    }
+
+
+                    if(
+                        payload.event_type ===
+                        "owner_updated"
+                    ){
+
+                        refreshOwners()
+                            .catch(
+                                (error) => {
+
+                                    console.error(
+                                        "Owner-Liste konnte nach Änderung nicht aktualisiert werden:",
+                                        error
+                                    );
+
+                                }
+                            );
+
+                    }
+
+
+                    if(
+                        payload.event_type ===
+                        "owner_deleted"
+                    ){
+
+                        refreshOwners()
+                            .catch(
+                                (error) => {
+
+                                    console.error(
+                                        "Owner-Liste konnte nach Löschung nicht aktualisiert werden:",
+                                        error
+                                    );
+
+                                }
+                            );
+
+                    }
+
+
+                    if(
+                        payload.event_type ===
+                        "fleet_updated"
+                    ){
+
+                        const ownerId =
+                            payload.data?.owner_id;
+
+                        if(!ownerId){
+                            return;
+                        }
+
+                        refreshFleet(
+                            ownerId
+                        )
+                            .catch(
+                                (error) => {
+
+                                    console.error(
+                                        "Fleet konnte nach Live-Update nicht aktualisiert werden:",
+                                        error
+                                    );
+
+                                }
+                            );
+
+                    }
+
+                } catch(error) {
+
+                    console.error(
+                        "SSE Event konnte nicht verarbeitet werden:",
+                        error
+                    );
+
+                }
+
+            }
+        );
+
+
+        return () => {
+
+            disconnectGalaxyEvents();
+
+        };
+
+    }, [loggedIn]);
+
+
 
 
 
