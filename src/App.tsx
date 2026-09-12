@@ -21,6 +21,8 @@ import { connectGalaxyEvents, disconnectGalaxyEvents } from "./utils/galaxyEvent
 import { getPlanet } from "./utils/galaxyAPI";
 import { useOwnerStore } from "./store/ownerStore";
 import { useFleetStore } from "./store/fleetStore";
+import Toast from "./components/Toast";
+import { useNotificationStore } from "./store/notificationStore";
 
 
 function App(){
@@ -29,18 +31,42 @@ function App(){
     state => state.selectedPlanet
   );
 
-  const presetPosition =
-    useUIStore(
-        state => state.createPlanetWindow.presetPosition
-    );
+    const presetPosition =
+        useUIStore(
+            state => state.createPlanetWindow.presetPosition
+        );
+
+    const panelOrder =
+        useUIStore(
+            state => state.panelOrder
+        );
+
+    const focusPanel =
+        useUIStore(
+            state => state.focusPanel
+        );
+
+    const getPanelZIndex = (
+        panelId: string
+    ) => {
+        const index =
+            panelOrder.indexOf(panelId);
+
+        if(index === -1){
+            return 200;
+        }
+
+        return 200 + index;
+    };
 
 
-  const [loggedIn, setLoggedIn] =
-    useState(false);
+    const [loggedIn, setLoggedIn] =
+        useState(false);
 
 
   const [checkingAuth, setCheckingAuth] =
       useState(true);
+
 
 
   useEffect(() => {
@@ -104,6 +130,8 @@ function App(){
   },[]);
 
 
+
+    //Live Update an Client weitergeben
     useEffect(() => {
 
         if(!loggedIn){
@@ -129,6 +157,9 @@ function App(){
         const refreshFleet =
             useFleetStore.getState().refreshFleet;
 
+        const addNotification =
+            useNotificationStore.getState().addNotification;
+
 
         connectGalaxyEvents(
             (event) => {
@@ -148,6 +179,11 @@ function App(){
                         payload.data?.id;
 
 
+
+                    /*
+                        Planet erstellt
+                    */
+
                     if(
                         payload.event_type ===
                         "planet_created"
@@ -163,6 +199,11 @@ function App(){
 
                                     addPlanetFromServer(
                                         planet
+                                    );
+
+                                    addNotification(
+                                        `🪐 Planet „${planet.name}“ hinzugefügt`,
+                                        "info"
                                     );
 
                                 }
@@ -181,6 +222,11 @@ function App(){
                     }
 
 
+
+                    /*
+                        Planet aktualisiert
+                    */
+
                     if(
                         payload.event_type ===
                         "planet_updated"
@@ -190,10 +236,38 @@ function App(){
                             return;
                         }
 
-                        refreshPlanet(id);
+                        const oldName =
+                            payload.data?.old_name;
+
+                        refreshPlanet(id)
+                            .then(
+                                () => {
+
+                                    addNotification(
+                                        `🪐 Planet „${oldName ?? "Unbekannt"}“ aktualisiert`,
+                                        "info"
+                                    );
+
+                                }
+                            )
+                            .catch(
+                                (error) => {
+
+                                    console.error(
+                                        "Planet konnte nach Live-Update nicht aktualisiert werden:",
+                                        error
+                                    );
+
+                                }
+                            );
 
                     }
 
+
+
+                    /*
+                        Planet gelöscht
+                    */
 
                     if(
                         payload.event_type ===
@@ -204,19 +278,56 @@ function App(){
                             return;
                         }
 
+                        const oldName =
+                            payload.data?.old_name;
+
                         removePlanetFromServer(
                             id
                         );
 
+                        addNotification(
+                            `🪐 Planet „${oldName ?? "Unbekannt"}“ gelöscht`,
+                            "info"
+                        );
+
                     }
 
+
+
+                    /*
+                        Owner erstellt
+                    */
 
                     if(
                         payload.event_type ===
                         "owner_created"
                     ){
 
+                        const ownerId =
+                            payload.data?.id;
+
+                        if(!ownerId){
+                            return;
+                        }
+
                         refreshOwners()
+                            .then(
+                                () => {
+
+                                    const owner =
+                                        useOwnerStore.getState().owners.find(
+                                            owner =>
+                                                String(owner.id) ===
+                                                String(ownerId)
+                                        );
+
+                                    addNotification(
+                                        `👤 Besitzer „${owner?.name ?? "Unbekannt"}“ hinzugefügt`,
+                                        "info"
+                                    );
+
+                                }
+                            )
                             .catch(
                                 (error) => {
 
@@ -231,12 +342,37 @@ function App(){
                     }
 
 
+
+                    /*
+                        Owner aktualisiert
+                    */
+
                     if(
                         payload.event_type ===
                         "owner_updated"
                     ){
 
+                        const ownerId =
+                            payload.data?.id;
+
+                        if(!ownerId){
+                            return;
+                        }
+
+                        const oldName =
+                            payload.data?.old_name;
+
                         refreshOwners()
+                            .then(
+                                () => {
+
+                                    addNotification(
+                                        `👤 Besitzer „${oldName ?? "Unbekannt"}“ aktualisiert`,
+                                        "info"
+                                    );
+
+                                }
+                            )
                             .catch(
                                 (error) => {
 
@@ -251,12 +387,37 @@ function App(){
                     }
 
 
+
+                    /*
+                        Owner gelöscht
+                    */
+
                     if(
                         payload.event_type ===
                         "owner_deleted"
                     ){
 
+                        const ownerId =
+                            payload.data?.id;
+
+                        if(!ownerId){
+                            return;
+                        }
+
+                        const oldName =
+                            payload.data?.old_name;
+
                         refreshOwners()
+                            .then(
+                                () => {
+
+                                    addNotification(
+                                        `👤 Besitzer „${oldName ?? "Unbekannt"}“ gelöscht`,
+                                        "info"
+                                    );
+
+                                }
+                            )
                             .catch(
                                 (error) => {
 
@@ -271,6 +432,11 @@ function App(){
                     }
 
 
+
+                    /*
+                        Fleet aktualisiert
+                    */
+
                     if(
                         payload.event_type ===
                         "fleet_updated"
@@ -283,9 +449,26 @@ function App(){
                             return;
                         }
 
+                        const owner =
+                            useOwnerStore.getState().owners.find(
+                                owner =>
+                                    String(owner.id) ===
+                                    String(ownerId)
+                            );
+
                         refreshFleet(
                             ownerId
                         )
+                            .then(
+                                () => {
+
+                                    addNotification(
+                                        `🚀 Flotte von „${owner?.name ?? "Unbekannt"}“ aktualisiert`,
+                                        "info"
+                                    );
+
+                                }
+                            )
                             .catch(
                                 (error) => {
 
@@ -330,6 +513,8 @@ function App(){
 
   }
 
+  
+
   if(!loggedIn){
 
     return (
@@ -350,42 +535,106 @@ function App(){
   return (
 
     <>
-      <GalaxyScene />
+        <GalaxyScene />
 
-      <PlanetInfo
-      key={selectedPlanet?.id ?? "none"} 
-      />
+        <PlanetInfo
+        key={selectedPlanet?.id ?? "none"} 
+        />
 
-      <MenuButton />
-      <Menu />
-      <SensorButton />
+        <MenuButton />
+        <Menu />
+        <SensorButton />
 
-      <UserMenuButton
+        <UserMenuButton
         onLogout={() => {
             setLoggedIn(false);
         }}
-      />
-      <UserSettingsWindow
-        onLogout={() => {
-            setLoggedIn(false);
-        }} />
+        />
 
-      <CreatePlanet
-          key={
-              presetPosition
-              ?
-              `${presetPosition.x}-${presetPosition.y}-${presetPosition.z}`
-              :
-              "empty"
-          }
-      />
+        <UserSettingsWindow
+            onLogout={() => {
+                setLoggedIn(false);
+            }}
+            onFocus={() =>
+                focusPanel("UserSettingsWindow")
+            }
+            zIndex={1000}
+        />
 
-      <OwnerWindow />
-      <PlanetList />
-      <FlightTimeWindow />
-      <FleetWindow />
-      <BuildingWindow />
-      <SensorNetworkGeneratorWindow />
+        <CreatePlanet
+            key={
+                presetPosition
+                ?
+                `${presetPosition.x}-${presetPosition.y}-${presetPosition.z}`
+                :
+                "empty"
+            }
+            onFocus={() =>
+                focusPanel("CreatePlanet")
+            }
+            zIndex={
+                getPanelZIndex("CreatePlanet")
+            }
+        />        
+
+        <OwnerWindow
+            onFocus={() =>
+                focusPanel("OwnerWindow")
+            }
+            zIndex={
+                getPanelZIndex("OwnerWindow")
+            }
+        />
+        <PlanetList
+            onFocus={() =>
+                focusPanel("PlanetList")
+            }
+            zIndex={
+                getPanelZIndex("PlanetList")
+            }
+        />
+
+        <FlightTimeWindow
+            onFocus={() =>
+                focusPanel("FlightTimeWindow")
+            }
+            zIndex={
+                getPanelZIndex("FlightTimeWindow")
+            }
+        />
+
+        <FleetWindow
+            onFocus={() =>
+                focusPanel("FleetWindow")
+            }
+            zIndex={
+                getPanelZIndex("FleetWindow")
+            }
+        />
+
+        <BuildingWindow
+            onFocus={() =>
+                focusPanel("BuildingWindow")
+            }
+            zIndex={
+                getPanelZIndex("BuildingWindow")
+            }
+        />
+
+        <SensorNetworkGeneratorWindow
+            onFocus={() =>
+                focusPanel(
+                    "SensorNetworkGeneratorWindow"
+                )
+            }
+            zIndex={
+                getPanelZIndex(
+                    "SensorNetworkGeneratorWindow"
+                )
+            }
+        />
+        
+        <Toast />
     </>
 
   );

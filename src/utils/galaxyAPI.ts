@@ -5,662 +5,293 @@ import type { Owner } from "../types/owner";
 
 
 
-//Live
-export function apiUrl(
-    path: string
-){
 
-    return (
-        path
-    );
 
+// Live
+export function apiUrl(path: string){
+    return path;
 }
-    
+
 
 
 
 export function getAuthHeaders(): HeadersInit{
-
-    const token =
-        localStorage.getItem(
-            "galaxy_token"
-        );
-
-
-    if(
-        !token
-    ){
-
+    const token = localStorage.getItem("galaxy_token");
+    if(!token){
         return {};
-
     }
-
-
     return {
-
-        "Authorization":
-            "Bearer " + token
-
+        "Authorization": "Bearer " + token
     };
-
 }
 
+async function getResponseData(response: Response): Promise<unknown>{
+    if(response.status === 204){
+        return null;
+    }
+    const contentType = response.headers.get("content-type") || "";
+    if(!contentType.includes("application/json")){
+        const text = await response.text();
+        return text ? { message: text } : null;
+    }
+    try{
+        return await response.json();
+    }
+    catch{
+        return null;
+    }
+}
 
+function getApiErrorMessage(data: unknown,response: Response): string{
+    if(
+        typeof data === "object" &&
+        data !== null &&
+        "message" in data &&
+        typeof data.message === "string" &&
+        data.message.trim()
+    ){
+        return data.message;
+    }
+    if(
+        typeof data === "object" &&
+        data !== null &&
+        "data" in data &&
+        typeof data.data === "object" &&
+        data.data !== null &&
+        "message" in data.data &&
+        typeof data.data.message === "string" &&
+        data.data.message.trim()
+    ){
+        return data.data.message;
+    }
+    if(response.status === 400){
+        return "Ungültige Anfrage.";
+    }
+    if(response.status === 403){
+        return "Zugriff verweigert.";
+    }
+    if(response.status === 404){
+        return "Der angeforderte Eintrag wurde nicht gefunden.";
+    }
+    if(response.status === 409){
+        return "Die Anfrage konnte wegen eines Konflikts nicht ausgeführt werden.";
+    }
+    if(response.status >= 500){
+        return "Der Server konnte die Anfrage nicht verarbeiten.";
+    }
+    return "Die Anfrage konnte nicht verarbeitet werden.";
+}
 
-
-
-export async function galaxyFetch(
-    path: string,
-    options: RequestInit = {}
-){
-
+export async function galaxyFetch(path: string,options: RequestInit = {}){
     const headers: HeadersInit = {
-
-        "Content-Type":
-            "application/json",
-
-
+        "Content-Type": "application/json",
         ...getAuthHeaders(),
-
-
         ...(options.headers || {})
-
     };
-
-
-
-    const response =
-        await fetch(
-
+    let response: Response;
+    try{
+        response = await fetch(
             apiUrl(path),
-
             {
-
                 ...options,
-
                 headers
-
             }
-
         );
-
-
-
-    if(
-        response.status === 401
-    ){
-
+    }
+    catch(error){
+    console.error("Galaxy API Netzwerkfehler:",error);
+    throw new Error(
+        "Der Server ist nicht erreichbar. Bitte prüfe deine Internetverbindung.",
+        {
+            cause: error
+        }
+    );
+}
+    if(response.status === 401){
         logout();
-
-
         window.location.reload();
-
-
-        throw new Error(
-            "Session abgelaufen"
-        );
-
+        throw new Error("Session abgelaufen");
     }
-
-
-
+    if(!response.ok){
+        const data = await getResponseData(response);
+        console.error("Galaxy API Fehler:",{
+            path,
+            status: response.status,
+            data
+        });
+        throw new Error(
+            getApiErrorMessage(
+                data,
+                response
+            )
+        );
+    }
     return response;
-
 }
 
-//Planets -----------------------------------------------------------------------------------
-
-export async function getPlanets(): Promise<Planet[]> {
-
-    const response =
-        await galaxyFetch(
-            "/wp-json/galaxy/v1/planets"
-        );
-
-
-    if(
-        !response.ok
-    ){
-
-        throw new Error(
-            "Planeten konnten nicht geladen werden"
-        );
-
+async function getJson<T>(response: Response): Promise<T>{
+    const data = await getResponseData(response);
+    if(data === null){
+        throw new Error("Der Server hat keine gültige Antwort zurückgegeben.");
     }
-
-
-    return await response.json();
-
+    return data as T;
 }
 
+// Planets -----------------------------------------------------------------------------------
 
-export async function getPlanet(
-    id: string
-): Promise<Planet> {
-
-    const response =
-        await galaxyFetch(
-            "/wp-json/galaxy/v1/planets/" + id
-        );
-
-    if(!response.ok){
-
-        throw new Error(
-            "Planet konnte nicht geladen werden"
-        );
-
-    }
-
-    return await response.json();
-
+export async function getPlanets(): Promise<Planet[]>{
+    const response = await galaxyFetch(
+        "/wp-json/galaxy/v1/planets"
+    );
+    return getJson<Planet[]>(response);
 }
 
-
-
-
-export async function createPlanet(
-    planet: Planet
-): Promise<Planet> {
-
-    const response =
-        await galaxyFetch(
-            "/wp-json/galaxy/v1/planets",
-            {
-                method: "POST",
-                body: JSON.stringify(planet)
-            }
-        );
-
-
-    if(!response.ok){
-
-        throw new Error(
-            "Planet konnte nicht erstellt werden"
-        );
-
-    }
-
-
-    return await response.json();
-
+export async function getPlanet(id: string): Promise<Planet>{
+    const response = await galaxyFetch(
+        "/wp-json/galaxy/v1/planets/" + encodeURIComponent(id)
+    );
+    return getJson<Planet>(response);
 }
 
-
-
-
-
-
-export async function updatePlanet(
-    id: string,
-    data: Partial<Planet>
-): Promise<Planet> {
-
-
-    const response =
-        await galaxyFetch(
-
-            "/wp-json/galaxy/v1/planets/" + id,
-
-            {
-
-                method:"PUT",
-
-                body:JSON.stringify(
-                    data
-                )
-
-            }
-
-        );
-
-
-    if(
-        !response.ok
-    ){
-
-        throw new Error(
-            "Planet konnte nicht aktualisiert werden"
-        );
-
-    }
-
-
-    return await response.json();
-
+export async function createPlanet(planet: Planet): Promise<Planet>{
+    const response = await galaxyFetch(
+        "/wp-json/galaxy/v1/planets",
+        {
+            method: "POST",
+            body: JSON.stringify(planet)
+        }
+    );
+    return getJson<Planet>(response);
 }
 
+export async function updatePlanet(id: string,data: Partial<Planet>): Promise<Planet>{
+    const response = await galaxyFetch(
+        "/wp-json/galaxy/v1/planets/" + encodeURIComponent(id),
+        {
+            method: "PUT",
+            body: JSON.stringify(data)
+        }
+    );
+    return getJson<Planet>(response);
+}
 
-
-
-
-export async function deletePlanet(
-    id:string
-):Promise<boolean>{
-
-
-    const response =
-        await galaxyFetch(
-
-            "/wp-json/galaxy/v1/planets/" + id,
-
-            {
-                method:"DELETE"
-            }
-
-        );
-
-
-    if(
-        !response.ok
-    ){
-
-        throw new Error(
-            "Planet konnte nicht gelöscht werden"
-        );
-
-    }
-
-
+export async function deletePlanet(id: string): Promise<boolean>{
+    await galaxyFetch(
+        "/wp-json/galaxy/v1/planets/" + encodeURIComponent(id),
+        {
+            method: "DELETE"
+        }
+    );
     return true;
-
 }
 
+// Owner -----------------------------------------------------------------------------------
 
-
-
-//Owner -----------------------------------------------------------------------------------
-
-
-export async function getOwners(): Promise<Owner[]> {
-
-    const response =
-        await galaxyFetch(
-            "/wp-json/galaxy/v1/owners"
-        );
-
-
-    if(
-        !response.ok
-    ){
-
-        throw new Error(
-            "Besitzer konnten nicht geladen werden"
-        );
-
-    }
-
-
-    return await response.json();
-
+export async function getOwners(): Promise<Owner[]>{
+    const response = await galaxyFetch(
+        "/wp-json/galaxy/v1/owners"
+    );
+    return getJson<Owner[]>(response);
 }
 
-
-export async function createOwner(
-    owner: Owner
-): Promise<Owner> {
-
-    const response =
-        await galaxyFetch(
-
-            "/wp-json/galaxy/v1/owners",
-
-            {
-                method: "POST",
-
-                body:
-                    JSON.stringify(
-                        owner
-                    )
-            }
-
-        );
-
-
-    if(
-        !response.ok
-    ){
-
-        throw new Error(
-            "Besitzer konnte nicht erstellt werden"
-        );
-
-    }
-
-
-    return await response.json();
-
+export async function createOwner(owner: Owner): Promise<Owner>{
+    const response = await galaxyFetch(
+        "/wp-json/galaxy/v1/owners",
+        {
+            method: "POST",
+            body: JSON.stringify(owner)
+        }
+    );
+    return getJson<Owner>(response);
 }
 
-
-export async function updateOwner(
-    id: string,
-    data: Partial<Owner>
-): Promise<Owner> {
-
-    const response =
-        await galaxyFetch(
-
-            "/wp-json/galaxy/v1/owners/" + id,
-
-            {
-                method: "PUT",
-
-                body:
-                    JSON.stringify(
-                        data
-                    )
-            }
-
-        );
-
-
-    if(
-        !response.ok
-    ){
-
-        throw new Error(
-            "Besitzer konnte nicht aktualisiert werden"
-        );
-
-    }
-
-
-    return await response.json();
-
+export async function updateOwner(id: string,data: Partial<Owner>): Promise<Owner>{
+    const response = await galaxyFetch(
+        "/wp-json/galaxy/v1/owners/" + encodeURIComponent(id),
+        {
+            method: "PUT",
+            body: JSON.stringify(data)
+        }
+    );
+    return getJson<Owner>(response);
 }
 
-
-export async function deleteOwner(
-    id: string
-): Promise<boolean> {
-
-    const response =
-        await galaxyFetch(
-
-            "/wp-json/galaxy/v1/owners/" + id,
-
-            {
-                method: "DELETE"
-            }
-
-        );
-
-
-    if(
-        !response.ok
-    ){
-
-        throw new Error(
-            "Besitzer konnte nicht gelöscht werden"
-        );
-
-    }
-
-
+export async function deleteOwner(id: string): Promise<boolean>{
+    await galaxyFetch(
+        "/wp-json/galaxy/v1/owners/" + encodeURIComponent(id),
+        {
+            method: "DELETE"
+        }
+    );
     return true;
-
 }
 
+// Fleet -----------------------------------------------------------------------------------
 
-
-//Fleet -----------------------------------------------------------------------------------
-
-
-export async function getFleet(
-    ownerId: string
-){
-
-    const response =
-        await galaxyFetch(
-
-            "/wp-json/galaxy/v1/fleets/" +
-            ownerId
-
-        );
-
-
-    if(!response.ok){
-
-        throw new Error(
-            "Flotte konnte nicht geladen werden"
-        );
-
-    }
-
-
-    return await response.json();
-
+export async function getFleet(ownerId: string){
+    const response = await galaxyFetch(
+        "/wp-json/galaxy/v1/fleets/" + encodeURIComponent(ownerId)
+    );
+    return getJson(response);
 }
 
-
-export async function createFleet(
-    ownerId: string
-){
-
-    const response =
-        await galaxyFetch(
-
-            "/wp-json/galaxy/v1/fleets",
-
-            {
-                method:"POST",
-
-                body:
-                    JSON.stringify({
-
-                        owner_id:
-                            ownerId
-
-                    })
-
-            }
-
-        );
-
-
-    if(!response.ok){
-
-        throw new Error(
-            "Flotte konnte nicht erstellt werden"
-        );
-
-    }
-
-
-    return await response.json();
-
+export async function createFleet(ownerId: string){
+    const response = await galaxyFetch(
+        "/wp-json/galaxy/v1/fleets",
+        {
+            method: "POST",
+            body: JSON.stringify({
+                owner_id: ownerId
+            })
+        }
+    );
+    return getJson(response);
 }
 
-
-export async function updateFleet(
-    ownerId: string,
-    data: Record<string, number>
-){
-
-    const response =
-        await galaxyFetch(
-
-            "/wp-json/galaxy/v1/fleets/" +
-            ownerId,
-
-            {
-                method:"PUT",
-
-                body:
-                    JSON.stringify(data)
-
-            }
-
-        );
-
-
-    if(!response.ok){
-
-        throw new Error(
-            "Flotte konnte nicht aktualisiert werden"
-        );
-
-    }
-
-
-    return await response.json();
-
+export async function updateFleet(ownerId: string,data: Record<string,number>){
+    const response = await galaxyFetch(
+        "/wp-json/galaxy/v1/fleets/" + encodeURIComponent(ownerId),
+        {
+            method: "PUT",
+            body: JSON.stringify(data)
+        }
+    );
+    return getJson(response);
 }
 
+// Benutzer -----------------------------------------------------------------------------------
 
-//Benutzer -----------------------------------------------------------------------------------
-
-
-export async function updateUsername(
-    username: string
-) {
-
-    const token =
-        localStorage.getItem(
-            "galaxy_token"
-        );
-
-
+export async function updateUsername(username: string){
+    const token = localStorage.getItem("galaxy_token");
     if(!token){
-
-        throw new Error(
-            "Keine gültige Sitzung vorhanden."
-        );
-
+        throw new Error("Keine gültige Sitzung vorhanden.");
     }
-
-
-    const response =
-        await fetch(
-
-            apiUrl(
-                "/wp-json/galaxy/v1/user/update-username"
-            ),
-
-            {
-
-                method:"POST",
-
-                headers:{
-
-                    "Content-Type":
-                        "application/json",
-
-                    "Authorization":
-                        "Bearer " + token
-
-                },
-
-                body:
-                    JSON.stringify({
-
-                        username
-
-                    })
-
-            }
-
-        );
-
-
-    const data =
-        await response.json();
-
-
-    if(!response.ok){
-
-        throw new Error(
-
-            data.message
-            ||
-            "Benutzername konnte nicht geändert werden."
-
-        );
-
-    }
-
-
-    return data;
-
+    const response = await galaxyFetch(
+        "/wp-json/galaxy/v1/user/update-username",
+        {
+            method: "POST",
+            body: JSON.stringify({
+                username
+            })
+        }
+    );
+    return getJson(response);
 }
 
-
-export async function updatePassword(
-    currentPassword: string,
-    newPassword: string
-) {
-
-    const token =
-        localStorage.getItem(
-            "galaxy_token"
-        );
-
-
+export async function updatePassword(currentPassword: string,newPassword: string){
+    const token = localStorage.getItem("galaxy_token");
     if(!token){
-
-        throw new Error(
-            "Keine gültige Sitzung vorhanden."
-        );
-
+        throw new Error("Keine gültige Sitzung vorhanden.");
     }
-
-
-    const response =
-        await fetch(
-
-            apiUrl(
-                "/wp-json/galaxy/v1/user/update-password"
-            ),
-
-            {
-
-                method:"POST",
-
-                headers:{
-
-                    "Content-Type":
-                        "application/json",
-
-                    "Authorization":
-                        "Bearer " + token
-
-                },
-
-                body:
-                    JSON.stringify({
-
-                        current_password:
-                            currentPassword,
-
-                        new_password:
-                            newPassword
-
-                    })
-
-            }
-
-        );
-
-
-    const data =
-        await response.json();
-
-
-    if(!response.ok){
-
-        throw new Error(
-
-            data.message
-            ||
-            "Passwort konnte nicht geändert werden."
-
-        );
-
-    }
-
-
-    return data;
-
+    const response = await galaxyFetch(
+        "/wp-json/galaxy/v1/user/update-password",
+        {
+            method: "POST",
+            body: JSON.stringify({
+                current_password: currentPassword,
+                new_password: newPassword
+            })
+        }
+    );
+    return getJson(response);
 }
-
-

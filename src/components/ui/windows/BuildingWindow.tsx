@@ -4,7 +4,15 @@ import { calculateBuildingTotalHp } from "../../../utils/calcBuilding";
 import Panel from "../Panel";
 import { useUIStore } from "../../../store/uiStore";
 
-export default function BuildingWindow(){
+    type Props = {
+        onFocus?: () => void;
+        zIndex?: number;
+    };
+
+    export default function BuildingWindow({
+        onFocus,
+        zIndex
+    }: Props){
 
 
     const openBuildingWindow = useUIStore(
@@ -92,11 +100,14 @@ export default function BuildingWindow(){
 
         <Panel
             title="Gebäuderechner"
-            width={400}
+            width={500}
             minHeight={200}
+            defaultHeight={650}
             initialX={30}
             initialY={100}
             onClose={closeBuildingWindow}
+            onFocus={onFocus}
+            zIndex={zIndex}
         >
 
             {

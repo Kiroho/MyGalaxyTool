@@ -83,7 +83,7 @@ export default function UserMenu({
 
                 right:20,
 
-                zIndex:100,
+                zIndex:10000,
 
                 background:"#102544",
 

@@ -7,16 +7,20 @@ import { usePlanetStore } from "../../../store/planetStore";
 import { addressToXYZ } from "../../../utils/address";
 import XYZDisplay from "./XYZDisplay";
 
+type Props = {
+    onFocus?: () => void;
+    zIndex?: number;
+};
 
-
-export default function FlightTimeWindow(){
-    
+export default function FlightTimeWindow({
+    onFocus,
+    zIndex
+}: Props) {
     const COORDINATE_TO_LY = 12;
 
     const flightTimeWindowOpen = useUIStore(
         state => state.flightTimeWindow.open
     );
-
 
     const closeFlightTimeWindow = useUIStore(
         state => state.closeFlightTimeWindow
@@ -26,10 +30,8 @@ export default function FlightTimeWindow(){
         state => state.planets
     );
 
-
     const [startMode, setStartMode] =
         useState<InputMode>("address");
-
 
     const [targetMode, setTargetMode] =
         useState<InputMode>("address");
@@ -40,877 +42,519 @@ export default function FlightTimeWindow(){
     const [targetAddress, setTargetAddress] =
         useState("");
 
-        
-    const updateAddressPoint = (
-        point:"start"|"target",
-        address:string
-    )=>{
-
-        //if(!isValidAddress(address))
-        //    return;
-
-
-        const xyz =
-            addressToXYZ(address);
-
-
-        if(!xyz)
-            return;
-
-
-        if(point === "start"){
-
-            setStartPoint({
-
-                x:xyz.x,
-                y:xyz.y,
-                z:xyz.z
-
-            });
-
-        }
-        else{
-
-            setTargetPoint({
-
-                x:xyz.x,
-                y:xyz.y,
-                z:xyz.z
-
-            });
-
-        }
-
-    };
-
     const [startPoint, setStartPoint] =
         useState<{
-
-            x:number | "";
-            y:number | "";
-            z:number | "";
-
+            x: number | "";
+            y: number | "";
+            z: number | "";
         }>({
-
-            x:"",
-            y:"",
-            z:""
-
+            x: "",
+            y: "",
+            z: ""
         });
-
-
 
     const [targetPoint, setTargetPoint] =
         useState<{
-
-            x:number | "";
-            y:number | "";
-            z:number | "";
-
+            x: number | "";
+            y: number | "";
+            z: number | "";
         }>({
-
-            x:"",
-            y:"",
-            z:""
-
+            x: "",
+            y: "",
+            z: ""
         });
-
-
 
     const [speed, setSpeed] =
         useState<number | "">("");
 
-
-
     const [distance, setDistance] =
         useState<number | null>(null);
-
-
 
     const [flightTime, setFlightTime] =
         useState("");
 
+    const updateAddressPoint = (
+        point: "start" | "target",
+        address: string
+    ) => {
+        const xyz =
+            addressToXYZ(address);
 
-
-    const updatePoint = (
-
-        point:"start"|"target",
-
-        axis:"x"|"y"|"z",
-
-        value:number | ""
-
-    )=>{
-
+        if(!xyz){
+            return;
+        }
 
         if(point === "start"){
-
-
-            setStartPoint(prev=>({
-
-                ...prev,
-
-                [axis]:value
-
-            }));
-
+            setStartPoint({
+                x: xyz.x,
+                y: xyz.y,
+                z: xyz.z
+            });
+        }else{
+            setTargetPoint({
+                x: xyz.x,
+                y: xyz.y,
+                z: xyz.z
+            });
         }
+    };
 
-        else{
-
-
-            setTargetPoint(prev=>({
-
+    const updatePoint = (
+        point: "start" | "target",
+        axis: "x" | "y" | "z",
+        value: number | ""
+    ) => {
+        if(point === "start"){
+            setStartPoint(prev => ({
                 ...prev,
-
-                [axis]:value
-
+                [axis]: value
             }));
-
+        }else{
+            setTargetPoint(prev => ({
+                ...prev,
+                [axis]: value
+            }));
         }
-
     };
 
     const selectPlanetPoint = (
-
-        point:"start"|"target",
-
-        planetId:string
-
-    )=>{
-
+        point: "start" | "target",
+        planetId: string
+    ) => {
         const planet =
             planets.find(
                 planet => planet.id === planetId
             );
 
-
-        if(!planet)
+        if(!planet){
             return;
-
+        }
 
         if(point === "start"){
-
             setStartPoint({
-
-                x:planet.x,
-
-                y:planet.y,
-
-                z:planet.z
-
+                x: planet.x,
+                y: planet.y,
+                z: planet.z
             });
-
-        }
-        else{
-
+        }else{
             setTargetPoint({
-
-                x:planet.x,
-
-                y:planet.y,
-
-                z:planet.z
-
+                x: planet.x,
+                y: planet.y,
+                z: planet.z
             });
-
         }
-
     };
 
-    const calculate = ()=>{
-
-
+    const calculate = () => {
         if(
-
             startPoint.x === "" ||
             startPoint.y === "" ||
             startPoint.z === "" ||
             targetPoint.x === "" ||
             targetPoint.y === "" ||
             targetPoint.z === ""
-
         ){
-
             return;
-
         }
-
-
 
         const dx =
             targetPoint.x - startPoint.x;
 
-
         const dy =
             targetPoint.y - startPoint.y;
-
 
         const dz =
             targetPoint.z - startPoint.z;
 
-
-
         const coordinateDistance =
             Math.sqrt(
-
                 dx * dx +
                 dy * dy +
                 dz * dz
-
             );
-
 
         const lightyearDistance =
             coordinateDistance * COORDINATE_TO_LY;
-
 
         setDistance(
             lightyearDistance
         );
 
-
-
         if(speed === "" || speed <= 0){
-
+            setFlightTime("");
             return;
-
         }
-
-
 
         const totalSeconds =
             Math.floor(
-
                 lightyearDistance * speed
-
             );
-
-
 
         const hours =
             Math.floor(
                 totalSeconds / 3600
             );
 
-
         const minutes =
             Math.floor(
                 (totalSeconds % 3600) / 60
             );
 
-
         const seconds =
             totalSeconds % 60;
 
-
-
         setFlightTime(
-
             `${hours
                 .toString()
-                .padStart(2,"0")
+                .padStart(2, "0")
             }:${
                 minutes
-                .toString()
-                .padStart(2,"0")
+                    .toString()
+                    .padStart(2, "0")
             }:${
                 seconds
-                .toString()
-                .padStart(2,"0")
+                    .toString()
+                    .padStart(2, "0")
             }`
-
         );
-
     };
 
-
     const renderXYZInput = (
-
-        point:"start"|"target"
-
-    )=>{
-
-
+        point: "start" | "target"
+    ) => {
         const values =
             point === "start"
-            ?
-            startPoint
-            :
-            targetPoint;
-
-
+                ? startPoint
+                : targetPoint;
 
         return (
-
             <div
-
                 style={{
-
-                    display:"flex",
-
-                    gap:"10px",
-
-                    marginTop:"20px",
-
-                    marginBottom:"40px"
-
+                    display: "flex",
+                    gap: "10px",
+                    marginTop: "20px",
+                    marginBottom: "40px"
                 }}
-
             >
-
                 {
-                    (["x","y","z"] as const).map(axis=>(
-
+                    (["x", "y", "z"] as const).map(axis => (
                         <div
-
                             key={axis}
-
                             style={{
-
-                                display:"flex",
-
-                                alignItems:"center",
-
-                                gap:"5px"
-
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "5px"
                             }}
-
                         >
-
                             <label>
-
                                 {axis.toUpperCase()}:
-
                             </label>
 
-
                             <input
-
                                 type="number"
-
                                 placeholder={
                                     point === "start"
-                                    ?
-                                    "100"
-                                    :
-                                    "200"
+                                        ? "100"
+                                        : "200"
                                 }
-
                                 style={{
-
-                                    width:"80px"
-
+                                    width: "80px"
                                 }}
-
                                 value={
                                     values[axis]
                                 }
-
-                                onChange={(event)=>{
-
+                                onChange={event => {
                                     updatePoint(
-
                                         point,
-
                                         axis,
-
                                         event.target.value === ""
-
-                                        ?
-
-                                        ""
-
-                                        :
-
-                                        Number(
-                                            event.target.value
-                                        )
-
+                                            ? ""
+                                            : Number(
+                                                event.target.value
+                                            )
                                     );
-
                                 }}
-
                             />
-
                         </div>
-
                     ))
                 }
-
             </div>
-
         );
-
     };
 
-
-    if(!flightTimeWindowOpen)
-
+    if(!flightTimeWindowOpen){
         return null;
+    }
 
+    const resultExtension =
+        distance !== null && (
+            <div
+                style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "10px"
+                }}
+            >
+                <div>
+                    Entfernung:
+                    <strong>
+                        {" "}
+                        {distance.toFixed(2)} lj
+                    </strong>
+                </div>
 
-
+                {
+                    flightTime && (
+                        <div>
+                            Flugzeit:
+                            <strong>
+                                {" "}
+                                {flightTime} h
+                            </strong>
+                        </div>
+                    )
+                }
+            </div>
+        );
 
     return (
-
         <Panel
-
             title="Flugzeitrechner"
-
-            width={350}
-
+            width={400}
+            defaultHeight={500}
             initialX={700}
-
             initialY={100}
-
             onClose={closeFlightTimeWindow}
-
+            onFocus={onFocus}
+            zIndex={zIndex}
+            extension={resultExtension}
         >
-
-
             <h4
                 style={{
-                    marginBottom:"5px"
+                    marginBottom: "5px"
                 }}
             >
                 Startpunkt
             </h4>
 
-
             <InputTabs
-            
                 value={startMode}
-
                 onChange={setStartMode}
-
             />
-
 
             {
                 startMode === "xyz" &&
-
                 renderXYZInput("start")
             }
 
-
             {
                 startMode === "address" &&
-
                 <div
                     style={{
-                        marginTop:"20px",
-                        marginBottom:"40px"
+                        marginTop: "20px",
+                        marginBottom: "40px"
                     }}
                 >
-
                     <input
-
                         placeholder="Adresse eingeben"
-
                         value={startAddress}
+                        onChange={event => {
+                            const value =
+                                event.target.value;
 
-                        onChange={(event)=>{
+                            setStartAddress(value);
 
-                        const value =
-                            event.target.value;
-
-
-                        setStartAddress(value);
-
-
-                        updateAddressPoint(
-                            "start",
-                            value
-                        );
-
-                    }}
-
+                            updateAddressPoint(
+                                "start",
+                                value
+                            );
+                        }}
                     />
 
-
-                    {
-                        <XYZDisplay
-
-                            x={startPoint.x}
-
-                            y={startPoint.y}
-
-                            z={startPoint.z}
-
-                        />
-                    }
-
-
+                    <XYZDisplay
+                        x={startPoint.x}
+                        y={startPoint.y}
+                        z={startPoint.z}
+                    />
                 </div>
-
             }
-
 
             {
                 startMode === "planet" &&
-
                 <div
                     style={{
-                        marginTop:"20px",
-                        marginBottom:"40px"
+                        marginTop: "20px",
+                        marginBottom: "40px"
                     }}
                 >
-
                     <select
-
-                        onChange={(event)=>{
-
+                        onChange={event => {
                             selectPlanetPoint(
                                 "start",
                                 event.target.value
                             );
-
                         }}
-
                     >
-
                         <option value="">
                             Planet auswählen
                         </option>
 
-
                         {
-                            planets.map(planet=>(
-
+                            planets.map(planet => (
                                 <option
                                     key={planet.id}
                                     value={planet.id}
                                 >
-
                                     {planet.name}
-
                                 </option>
-
                             ))
                         }
-
-
                     </select>
 
                     <XYZDisplay
-
                         x={startPoint.x}
-
                         y={startPoint.y}
-
                         z={startPoint.z}
-
                     />
-
-
                 </div>
-
             }
-
-
-
 
             <h4
                 style={{
-                    marginBottom:"5px"
+                    marginBottom: "5px"
                 }}
             >
                 Zielpunkt
             </h4>
 
-
             <InputTabs
-
                 value={targetMode}
-
                 onChange={setTargetMode}
-
             />
-
-
 
             {
                 targetMode === "xyz" &&
-
                 renderXYZInput("target")
             }
 
-
             {
                 targetMode === "address" &&
-
                 <div
                     style={{
-                        marginTop:"20px",
-                        marginBottom:"40px"
+                        marginTop: "20px",
+                        marginBottom: "40px"
                     }}
                 >
-
                     <input
-
                         placeholder="Adresse eingeben"
-
                         value={targetAddress}
+                        onChange={event => {
+                            const value =
+                                event.target.value;
 
-                        onChange={(event)=>{
+                            setTargetAddress(value);
 
-                        const value =
-                            event.target.value;
-
-
-                        setTargetAddress(value);
-
-
-                        updateAddressPoint(
-                            "target",
-                            value
-                        );
-
-                    }}
-
+                            updateAddressPoint(
+                                "target",
+                                value
+                            );
+                        }}
                     />
 
-
-                    {
-                        <XYZDisplay
-
-                            x={targetPoint.x}
-
-                            y={targetPoint.y}
-
-                            z={targetPoint.z}
-
-                        />
-                    }
-
-
+                    <XYZDisplay
+                        x={targetPoint.x}
+                        y={targetPoint.y}
+                        z={targetPoint.z}
+                    />
                 </div>
-
             }
-
-
 
             {
                 targetMode === "planet" &&
-
                 <div
                     style={{
-                        marginTop:"20px",
-                        marginBottom:"40px"
+                        marginTop: "20px",
+                        marginBottom: "40px"
                     }}
                 >
-
                     <select
-
-                        onChange={(event)=>{
-
+                        onChange={event => {
                             selectPlanetPoint(
                                 "target",
                                 event.target.value
                             );
-
                         }}
-
                     >
-
                         <option value="">
                             Planet auswählen
                         </option>
 
-
                         {
-                            planets.map(planet=>(
-
+                            planets.map(planet => (
                                 <option
                                     key={planet.id}
                                     value={planet.id}
                                 >
-
                                     {planet.name}
-
                                 </option>
-
                             ))
                         }
-
-
                     </select>
 
-
                     <XYZDisplay
-
                         x={targetPoint.x}
-
                         y={targetPoint.y}
-
                         z={targetPoint.z}
-
                     />
-
                 </div>
-
             }
-
-
-
 
             <hr />
 
-
-
             <div
-
                 style={{
-
-                    display:"flex",
-
-                    alignItems:"center",
-
-                    gap:"10px",
-
-                    marginTop:"15px"
-
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    marginTop: "15px"
                 }}
-
             >
-
                 <label>
-
                     Geschwindigkeit:
-
                 </label>
-
 
                 <input
-
                     style={{
-
-                        width:"50px"
-
+                        width: "50px"
                     }}
-
                     type="number"
-
                     placeholder="1.23"
-
                     step="0.01"
-
                     value={speed}
-
-                    onChange={(event)=>{
-
+                    onChange={event => {
                         setSpeed(
-
                             event.target.value === ""
-
-                            ?
-
-                            ""
-
-                            :
-
-                            Number(
-                                event.target.value
-                            )
-
+                                ? ""
+                                : Number(
+                                    event.target.value
+                                )
                         );
-
                     }}
-
                 />
 
-
                 <label>
-
                     s/lj
-
                 </label>
 
-
                 <button
-
                     style={{
-
-                        marginLeft:"20px"
-
+                        marginLeft: "20px"
                     }}
-
                     onClick={calculate}
-
                 >
-
                     Berechnen
-
                 </button>
-
-
             </div>
-
-
-
-
-
-            {
-                distance !== null &&
-
-                <div
-
-                    style={{
-
-                        marginTop:"20px"
-
-                    }}
-
-                >
-
-                    <div>
-
-                        Entfernung:
-
-                        <strong>
-
-                            {" "}
-
-                            {distance.toFixed(2)}
-
-                        </strong>
-                        &nbsp;lj
-
-                    </div>
-
-
-                    <div
-
-                        style={{
-
-                            marginTop:"8px"
-
-                        }}
-
-                    >
-
-                        Flugzeit:
-
-                        <strong>
-
-                            {" "}
-
-                            {flightTime}
-
-                        </strong>
-                        {flightTime && ` h`}
-
-                    </div>
-
-
-                </div>
-
-            }
-
-
         </Panel>
-
     );
-
 }

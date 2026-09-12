@@ -8,237 +8,211 @@ import {
     deletePlanet as apiDeletePlanet
 } from "../utils/galaxyAPI";
 
-
 type PlanetStore = {
+    // alle Planeten im aktuellen Universum
+    planets: Planet[];
 
-  // alle Planeten im aktuellen Universum
-  planets: Planet[];
+    // aktuell ausgewählter Planet
+    selectedPlanet: Planet | null;
 
-  // aktuell ausgewählter Planet
-  selectedPlanet: Planet | null;
-  
+    // Daten laden
+    setPlanets: (planets: Planet[]) => void;
 
+    // Einzelnen Planet refreshen
+    refreshPlanet: (id: string) => Promise<void>;
 
-  // Daten laden
-  setPlanets: (planets: Planet[]) => void;
+    // Auswahl
+    selectPlanet: (planet: Planet) => void;
+    clearSelection: () => void;
 
-  // Einzelnen Planet refreshen
-  refreshPlanet: (id: string) => Promise<void>;
+    // Bearbeiten
+    updatePlanet: (
+        id: string,
+        data: Partial<Planet>
+    ) => Promise<Planet>;
 
-  // Auswahl
-  selectPlanet: (planet: Planet) => void;
+    // Neu erstellen
+    addPlanet: (
+        planet: Planet
+    ) => Promise<Planet>;
 
-  clearSelection: () => void;
+    // Planet kopieren
+    copyPlanet: (
+        planet: Planet
+    ) => Promise<Planet>;
 
+    // Löschen
+    deletePlanet: (
+        id: string
+    ) => Promise<void>;
 
-  // Bearbeiten
-  updatePlanet: (
-      id: string,
-      data: Partial<Planet>
-  ) => Promise<Planet>;
+    // Preview
+    previewPlanet: Planet | null;
 
+    setPreviewPlanet: (
+        planet: Planet | null
+    ) => void;
 
-  // Neu erstellen
-  addPlanet: (
-    planet: Planet
-  ) => Promise<Planet>;
+    loadPlanets: () => Promise<void>;
 
-
-  // Löschen
-  deletePlanet: (
-    id: string
-  ) => Promise<void>;
-
-  //Preview
-  previewPlanet: Planet | null;
-
-  setPreviewPlanet: (
-      planet: Planet | null
-  ) => void;
-
-  loadPlanets: () => Promise<void>;
-
-// Planeten Setzen und Löschen via live update
-addPlanetFromServer: (planet: Planet) => void;
-removePlanetFromServer: (id: string) => void;
-
-
+    // Planeten setzen und löschen via Live Update
+    addPlanetFromServer: (planet: Planet) => void;
+    removePlanetFromServer: (id: string) => void;
 };
 
-
-export const usePlanetStore = create<PlanetStore>((set)=>({
-
+export const usePlanetStore = create<PlanetStore>((set) => ({
     planets: [],
-
     selectedPlanet: null,
 
-
     setPlanets: (planets) =>
-    set({
-        planets
-    }),
-
+        set({
+            planets
+        }),
 
     refreshPlanet: async (id) => {
-
         const planet =
             await getPlanet(id);
 
         set((state) => ({
-
             planets:
                 state.planets.map(
                     existingPlanet =>
                         existingPlanet.id === id
-                        ?
-                        planet
-                        :
-                        existingPlanet
+                            ? planet
+                            : existingPlanet
                 ),
 
             selectedPlanet:
                 state.selectedPlanet?.id === id
-                ?
-                planet
-                :
-                state.selectedPlanet
-
+                    ? planet
+                    : state.selectedPlanet
         }));
-
     },
 
-
     selectPlanet: (planet) =>
-    set({
-        selectedPlanet: planet,
-        previewPlanet:null
-    }),
-
-
+        set({
+            selectedPlanet: planet,
+            previewPlanet: null
+        }),
 
     clearSelection: () =>
-    set({
-        selectedPlanet: null,
-        previewPlanet:null
-    }),
-
+        set({
+            selectedPlanet: null,
+            previewPlanet: null
+        }),
 
     previewPlanet: null,
 
-    setPreviewPlanet:(planet)=>
-    set({
-        previewPlanet:planet
-    }),
-
+    setPreviewPlanet: (planet) =>
+        set({
+            previewPlanet: planet
+        }),
 
     updatePlanet: async (
         id,
         data
-    )=>{
-
-        // const start =
-        //     performance.now();
-
+    ) => {
         const updated =
             await apiUpdatePlanet(
                 id,
                 data
             );
 
-        // console.log(
-        //     "Planet PUT Dauer:",
-        //     performance.now() - start,
-        //     "ms"
-        // );
-
-        set((state)=>({
+        set((state) => ({
             planets:
                 state.planets.map(
                     planet =>
                         planet.id === id
-                        ?
-                        updated
-                        :
-                        planet
+                            ? updated
+                            : planet
                 ),
-
 
             selectedPlanet:
                 state.selectedPlanet?.id === id
-                ?
-                updated
-                :
-                state.selectedPlanet
+                    ? updated
+                    : state.selectedPlanet
         }));
-        return updated;
 
+        return updated;
     },
 
-
-    addPlanet: async (planet)=>{
-
+    addPlanet: async (planet) => {
         const created =
             await createPlanet(
                 planet
             );
 
-
-        set((state)=>({
-
-            planets:[
+        set((state) => ({
+            planets: [
                 ...state.planets,
                 created
             ]
-
         }));
-        return created;
 
+        return created;
     },
 
+    copyPlanet: async (planet) => {
+        const copy: Planet = {
+            ...planet,
+            id: crypto.randomUUID(),
+            name: `${planet.name} Kopie`
+        };
+
+        const created =
+            await createPlanet(
+                copy
+            );
+
+        set((state) => ({
+            planets: [
+                ...state.planets,
+                created
+            ],
+            selectedPlanet: created,
+            previewPlanet: null
+        }));
+
+        return created;
+    },
 
     deletePlanet: async (
         id
-    )=>{
+    ) => {
         await apiDeletePlanet(
             id
         );
 
-
-        set((state)=>({
-
+        set((state) => ({
             planets:
                 state.planets.filter(
                     planet =>
                         planet.id !== id
                 ),
 
-
             selectedPlanet:
                 state.selectedPlanet?.id === id
-                ?
-                null
-                :
-                state.selectedPlanet
+                    ? null
+                    : state.selectedPlanet,
 
+            previewPlanet:
+                state.previewPlanet?.id === id
+                    ? null
+                    : state.previewPlanet
         }));
-
     },
 
-    
     loadPlanets: async () => {
-
         const planets =
             await getPlanets();
 
         set({
             planets
         });
-
     },
 
     addPlanetFromServer: (planet) =>
         set((state) => {
-
             if(
                 state.planets.some(
                     existingPlanet =>
@@ -254,7 +228,6 @@ export const usePlanetStore = create<PlanetStore>((set)=>({
                     planet
                 ]
             };
-
         }),
 
     removePlanetFromServer: (id) =>
@@ -267,11 +240,12 @@ export const usePlanetStore = create<PlanetStore>((set)=>({
 
             selectedPlanet:
                 state.selectedPlanet?.id === id
-                ?
-                null
-                :
-                state.selectedPlanet
-        })),
+                    ? null
+                    : state.selectedPlanet,
 
-
+            previewPlanet:
+                state.previewPlanet?.id === id
+                    ? null
+                    : state.previewPlanet
+        }))
 }));

@@ -51,7 +51,7 @@ export default function MenuButton() {
 
                 cursor: "pointer",
 
-                zIndex: 100,
+                zIndex: 10000,
 
                 color: "white",
 

@@ -47,7 +47,7 @@ export default function SensorButton(){
 
                 cursor: "pointer",
 
-                zIndex: 100,
+                zIndex: 10000,
 
                 color: showSensors
                     ? "cyan"

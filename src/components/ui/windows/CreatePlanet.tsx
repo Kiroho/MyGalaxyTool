@@ -7,7 +7,15 @@ import { xyzToAddress, addressToXYZ, isValidAddress } from "../../../utils/addre
 import Panel from "../Panel";
 
 
-export default function CreatePlanet(){
+    type Props = {
+        onFocus?: () => void;
+        zIndex?: number;
+    };
+
+    export default function CreatePlanet({
+        onFocus,
+        zIndex
+    }: Props){
 
 
     const openCreatePlanetWindow = useUIStore(
@@ -219,19 +227,15 @@ export default function CreatePlanet(){
       >
 
         <Panel
-
             title="Planet Erstellen"
-
-            width={230}
-
+            width={300}
             minHeight={200}
-
+            defaultHeight={340}
             initialX={30}
-
             initialY={100}
-
             onClose={closeCreatePlanetWindow}
-
+            onFocus={onFocus}
+            zIndex={zIndex}
         >
 
 

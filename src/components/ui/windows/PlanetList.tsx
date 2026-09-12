@@ -7,7 +7,15 @@ import {Trash2 } from "lucide-react";
 import Panel from "../Panel";
 
 
-export default function PlanetList(){
+    type Props = {
+        onFocus?: () => void;
+        zIndex?: number;
+    };
+
+    export default function PlanetList({
+        onFocus,
+        zIndex
+    }: Props){
 
 
     const planets = usePlanetStore(
@@ -223,19 +231,15 @@ export default function PlanetList(){
     return (
 
         <Panel
-
             title="Planetenliste"
-
-            width={550}
-
+            width={640}
             minHeight={200}
-
+            defaultHeight={790}
             initialX={30}
-
             initialY={100}
-
             onClose={closePlanetListWindow}
-
+            onFocus={onFocus}
+            zIndex={zIndex}
         >
 
 
@@ -647,6 +651,9 @@ export default function PlanetList(){
 
 
                                 <button
+                                    style={{
+                                            marginRight:"15px"
+                                        }}
 
                                     onClick={(event)=>{
 

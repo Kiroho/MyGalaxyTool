@@ -104,7 +104,7 @@ export default function Menu() {
 
                 left:20,
 
-                zIndex:100,
+                zIndex:10000,
 
                 background:"#102544",
 
