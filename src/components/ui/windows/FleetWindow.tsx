@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { calculateFleetDamage } from "../../../utils/calcFleet";
 import { useUIStore } from "../../../store/uiStore";
 import { useOwnerStore } from "../../../store/ownerStore";
@@ -9,6 +9,9 @@ type Props = {
     onFocus?: () => void;
     zIndex?: number;
 };
+
+const fleetFilterStorageKey =
+    "galaxy_fleet_filter_owners";
 
 export default function FleetWindow({
     onFocus,
@@ -76,6 +79,63 @@ export default function FleetWindow({
             "success" | "error" | "info"
         >("info");
 
+    const [
+        selectedOwnerIds,
+        setSelectedOwnerIds
+    ] =
+        useState<string[]>(() => {
+            const stored =
+                localStorage.getItem(
+                    fleetFilterStorageKey
+                );
+
+            if(stored === null){
+                return [];
+            }
+
+            try{
+                const parsed =
+                    JSON.parse(
+                        stored
+                    );
+
+                if(
+                    Array.isArray(parsed)
+                ){
+                    return parsed;
+                }
+            }
+            catch(error){
+                console.error(
+                    "Flottenfilter konnte nicht aus localStorage geladen werden:",
+                    error
+                );
+            }
+
+            return [];
+        });
+
+    const [
+        ownerDropdownOpen,
+        setOwnerDropdownOpen
+    ] =
+        useState(false);
+
+    const ownerDropdownRef =
+        useRef<HTMLDivElement>(null);
+
+    const ownerDropdownButtonRef =
+        useRef<HTMLButtonElement>(null);
+
+    const [
+        ownerDropdownPosition,
+        setOwnerDropdownPosition
+    ] =
+        useState({
+            top: 0,
+            left: 0
+        });
+
     useEffect(() => {
         if(!openFleetWindow){
             return;
@@ -98,11 +158,11 @@ export default function FleetWindow({
                                 owner.id
                             );
                         }
-                        catch(error){
+                        catch(createError){
                             console.error(
                                 "Flotte konnte nicht erstellt werden:",
                                 owner.id,
-                                error
+                                createError
                             );
                         }
                     }
@@ -116,6 +176,124 @@ export default function FleetWindow({
         loadFleet,
         createFleet
     ]);
+
+    useEffect(() => {
+        const handleClick = (
+            event: MouseEvent
+        ) => {
+            if(
+                ownerDropdownRef.current &&
+                !ownerDropdownRef.current.contains(
+                    event.target as Node
+                )
+            ){
+                setOwnerDropdownOpen(
+                    false
+                );
+            }
+        };
+
+        document.addEventListener(
+            "mousedown",
+            handleClick
+        );
+
+        return () => {
+            document.removeEventListener(
+                "mousedown",
+                handleClick
+            );
+        };
+    }, []);
+
+    const storedFleetFilter =
+        localStorage.getItem(
+            fleetFilterStorageKey
+        );
+
+    const filteredOwnerIds =
+        storedFleetFilter === null
+            ? owners.map(
+                owner =>
+                    owner.id
+            )
+            : selectedOwnerIds.filter(
+                ownerId =>
+                    owners.some(
+                        owner =>
+                            owner.id ===
+                            ownerId
+                    )
+            );
+
+    const filteredOwners =
+        owners.filter(
+            owner =>
+                filteredOwnerIds.includes(
+                    owner.id
+                )
+        );
+
+    const saveOwnerFilter = (
+        ownerIds: string[]
+    ) => {
+        localStorage.setItem(
+            fleetFilterStorageKey,
+            JSON.stringify(
+                ownerIds
+            )
+        );
+    };
+
+    const selectAllOwners = () => {
+        const ownerIds =
+            owners.map(
+                owner =>
+                    owner.id
+            );
+
+        setSelectedOwnerIds(
+            ownerIds
+        );
+
+        saveOwnerFilter(
+            ownerIds
+        );
+    };
+
+    const deselectAllOwners = () => {
+        setSelectedOwnerIds([]);
+
+        saveOwnerFilter([]);
+    };
+
+    const toggleOwner = (
+        ownerId: string
+    ) => {
+        const nextOwnerIds =
+            selectedOwnerIds.includes(
+                ownerId
+            )
+                ?
+                selectedOwnerIds.filter(
+                    id =>
+                        id !==
+                        ownerId
+                )
+                :
+                [
+                    ...selectedOwnerIds,
+                    ownerId
+                ];
+
+        setSelectedOwnerIds(
+            nextOwnerIds
+        );
+
+        saveOwnerFilter(
+            nextOwnerIds
+        );
+    };
 
     const startEditing = (
         ownerId: string
@@ -270,6 +448,28 @@ export default function FleetWindow({
         );
     };
 
+    const toggleOwnerDropdown = () => {
+        if(
+            !ownerDropdownOpen &&
+            ownerDropdownButtonRef.current
+        ){
+            const rect =
+                ownerDropdownButtonRef.current.getBoundingClientRect();
+
+            setOwnerDropdownPosition({
+                top:
+                    rect.bottom + 4,
+                left:
+                    rect.left
+            });
+        }
+
+        setOwnerDropdownOpen(
+            previous =>
+                !previous
+        );
+    };
+
     if(!openFleetWindow){
         return null;
     }
@@ -293,652 +493,378 @@ export default function FleetWindow({
         >
             <div
                 style={{
-                    overflowX: "auto",
-                    width: "100%"
+                    position:"relative",
+                    width:"100%"
                 }}
             >
-                <table
+                <div
+                    ref={ownerDropdownRef}
                     style={{
-                        width: "100%",
-                        borderCollapse: "collapse",
-                        whiteSpace: "nowrap",
-                        tableLayout: "fixed"
+                        position:"relative",
+                        marginBottom:"12px"
                     }}
                 >
-                    <colgroup>
-                        <col
-                            style={{
-                                width: "140px"
-                            }}
-                        />
+                    <button
+                        ref={ownerDropdownButtonRef}
+                        onClick={toggleOwnerDropdown}
+                        style={{
+                            width:"150px",
+                            padding:"5px",
+                            cursor:"pointer"
+                        }}
+                    >
+                        Besitzer auswählen ▼
+                    </button>
 
-                        <col
+                    {
+                        ownerDropdownOpen &&
+                        <div
                             style={{
-                                width: "100px"
+                                position:"fixed",
+                                top:ownerDropdownPosition.top,
+                                left:ownerDropdownPosition.left,
+                                width:"220px",
+                                maxHeight:"450px",
+                                overflowY:"auto",
+                                background:"#102544",
+                                border:"1px solid #ffffff33",
+                                padding:"8px",
+                                zIndex:100000,
+                                boxSizing:"border-box",
+                                boxShadow:
+                                    "0 10px 30px rgba(0,0,0,0.5)"
                             }}
-                        />
-
-                        <col
-                            style={{
-                                width: "75px"
-                            }}
-                        />
-
-                        <col
-                            style={{
-                                width: "75px"
-                            }}
-                        />
-
-                        <col
-                            style={{
-                                width: "75px"
-                            }}
-                        />
-
-                        <col
-                            style={{
-                                width: "75px"
-                            }}
-                        />
-
-                        <col
-                            style={{
-                                width: "75px"
-                            }}
-                        />
-
-                        <col
-                            style={{
-                                width: "75px"
-                            }}
-                        />
-
-                        <col
-                            style={{
-                                width: "110px"
-                            }}
-                        />
-
-                        <col
-                            style={{
-                                width: "140px"
-                            }}
-                        />
-
-                        <col
-                            style={{
-                                width: "150px"
-                            }}
-                        />
-                    </colgroup>
-
-                    <thead>
-                        <tr>
-                            <th
+                        >
+                            <div
                                 style={{
-                                    textAlign: "left",
-                                    padding: "8px"
+                                    display:"flex",
+                                    gap:"6px",
+                                    marginBottom:"8px",
+                                    paddingBottom:"8px",
+                                    borderBottom:
+                                        "1px solid #ffffff33"
                                 }}
                             >
-                                Besitzer
-                            </th>
-
-                            <th
-                                style={{
-                                    textAlign: "left",
-                                    padding: "8px"
-                                }}
-                            >
-                                Volk
-                            </th>
-
-                            <th
-                                style={{
-                                    padding: "8px"
-                                }}
-                            >
-                                T1
-                            </th>
-
-                            <th
-                                style={{
-                                    padding: "8px"
-                                }}
-                            >
-                                T2
-                            </th>
-
-                            <th
-                                style={{
-                                    padding: "8px"
-                                }}
-                            >
-                                T3
-                            </th>
-
-                            <th
-                                style={{
-                                    padding: "8px"
-                                }}
-                            >
-                                S1
-                            </th>
-
-                            <th
-                                style={{
-                                    padding: "8px"
-                                }}
-                            >
-                                S2
-                            </th>
-
-                            <th
-                                style={{
-                                    padding: "8px"
-                                }}
-                            >
-                                S3
-                            </th>
-
-                            <th
-                                style={{
-                                    padding: "8px"
-                                }}
-                            >
-                                Angriff
-                            </th>
-
-                            <th
-                                style={{
-                                    padding: "8px"
-                                }}
-                            >
-                                Gebäudeangriff
-                            </th>
-
-                            <th
-                                style={{
-                                    padding: "8px"
-                                }}
-                            >
-                                Aktion
-                            </th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        {
-                            owners.map(
-                                owner => {
-                                    const fleet =
-                                        fleets[
-                                            owner.id
-                                        ];
-
-                                    if(!fleet){
-                                        return null;
+                                <button
+                                    onClick={
+                                        selectAllOwners
                                     }
+                                >
+                                    Alle auswählen
+                                </button>
 
-                                    const isEditing =
-                                        editingOwnerId ===
-                                        owner.id;
+                                <button
+                                    onClick={
+                                        deselectAllOwners
+                                    }
+                                >
+                                    Alles abwählen
+                                </button>
+                            </div>
 
-                                    const damage =
-                                        calculateFleetDamage(
-                                            fleet,
-                                            owner.volk
-                                        );
-
-                                    const editedFleet =
-                                        isEditing
-                                            ? {
-                                                ...fleet,
-                                                ...editedFleets[
-                                                    owner.id
-                                                ]
+                            {
+                                owners.map(
+                                    owner => (
+                                        <label
+                                            key={
+                                                owner.id
                                             }
-                                            : null;
+                                            style={{
+                                                display:"flex",
+                                                alignItems:"center",
+                                                gap:"6px",
+                                                marginBottom:"4px"
+                                            }}
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={
+                                                    filteredOwnerIds.includes(
+                                                        owner.id
+                                                    )
+                                                }
+                                                onChange={() => {
+                                                    toggleOwner(
+                                                        owner.id
+                                                    );
+                                                }}
+                                            />
 
-                                    const editedDamage =
-                                        editedFleet
-                                            ? calculateFleetDamage(
-                                                editedFleet,
+                                            <span
+                                                style={{
+                                                    width:"12px",
+                                                    height:"12px",
+                                                    borderRadius:"50%",
+                                                    background:
+                                                        owner.color,
+                                                    flexShrink:0
+                                                }}
+                                            />
+
+                                            {owner.name}
+                                        </label>
+                                    )
+                                )
+                            }
+                        </div>
+                    }
+                </div>
+
+                <div
+                    style={{
+                        overflowX:"auto",
+                        overflowY:"auto",
+                        width:"100%"
+                    }}
+                >
+                    <table
+                        style={{
+                            width:"100%",
+                            borderCollapse:"collapse",
+                            whiteSpace:"nowrap",
+                            tableLayout:"fixed"
+                        }}
+                    >
+                        <colgroup>
+                            <col
+                                style={{
+                                    width:"140px"
+                                }}
+                            />
+
+                            <col
+                                style={{
+                                    width:"100px"
+                                }}
+                            />
+
+                            <col
+                                style={{
+                                    width:"75px"
+                                }}
+                            />
+
+                            <col
+                                style={{
+                                    width:"75px"
+                                }}
+                            />
+
+                            <col
+                                style={{
+                                    width:"75px"
+                                }}
+                            />
+
+                            <col
+                                style={{
+                                    width:"75px"
+                                }}
+                            />
+
+                            <col
+                                style={{
+                                    width:"75px"
+                                }}
+                            />
+
+                            <col
+                                style={{
+                                    width:"75px"
+                                }}
+                            />
+
+                            <col
+                                style={{
+                                    width:"110px"
+                                }}
+                            />
+
+                            <col
+                                style={{
+                                    width:"140px"
+                                }}
+                            />
+
+                            <col
+                                style={{
+                                    width:"150px"
+                                }}
+                            />
+                        </colgroup>
+
+                        <thead>
+                            <tr>
+                                <th
+                                    style={{
+                                        textAlign:"left",
+                                        padding:"8px"
+                                    }}
+                                >
+                                    Besitzer
+                                </th>
+
+                                <th
+                                    style={{
+                                        textAlign:"left",
+                                        padding:"8px"
+                                    }}
+                                >
+                                    Volk
+                                </th>
+
+                                <th
+                                    style={{
+                                        padding:"8px"
+                                    }}
+                                >
+                                    T1
+                                </th>
+
+                                <th
+                                    style={{
+                                        padding:"8px"
+                                    }}
+                                >
+                                    T2
+                                </th>
+
+                                <th
+                                    style={{
+                                        padding:"8px"
+                                    }}
+                                >
+                                    T3
+                                </th>
+
+                                <th
+                                    style={{
+                                        padding:"8px"
+                                    }}
+                                >
+                                    S1
+                                </th>
+
+                                <th
+                                    style={{
+                                        padding:"8px"
+                                    }}
+                                >
+                                    S2
+                                </th>
+
+                                <th
+                                    style={{
+                                        padding:"8px"
+                                    }}
+                                >
+                                    S3
+                                </th>
+
+                                <th
+                                    style={{
+                                        padding:"8px"
+                                    }}
+                                >
+                                    Angriff
+                                </th>
+
+                                <th
+                                    style={{
+                                        padding:"8px"
+                                    }}
+                                >
+                                    Gebäudeangriff
+                                </th>
+
+                                <th
+                                    style={{
+                                        padding:"8px"
+                                    }}
+                                >
+                                    Aktion
+                                </th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {
+                                filteredOwners.map(
+                                    owner => {
+                                        const fleet =
+                                            fleets[
+                                                owner.id
+                                            ];
+
+                                        if(!fleet){
+                                            return null;
+                                        }
+
+                                        const isEditing =
+                                            editingOwnerId ===
+                                            owner.id;
+
+                                        const damage =
+                                            calculateFleetDamage(
+                                                fleet,
                                                 owner.volk
-                                            )
-                                            : null;
+                                            );
 
-                                    return (
-                                        <>
-                                            <tr
+                                        const editedFleet =
+                                            isEditing
+                                                ? {
+                                                    ...fleet,
+                                                    ...editedFleets[
+                                                        owner.id
+                                                    ]
+                                                }
+                                                : null;
+
+                                        const editedDamage =
+                                            editedFleet
+                                                ? calculateFleetDamage(
+                                                    editedFleet,
+                                                    owner.volk
+                                                )
+                                                : null;
+
+                                        return (
+                                            <Fragment
                                                 key={
                                                     owner.id
                                                 }
                                             >
-                                                <td
-                                                    style={{
-                                                        padding: "8px",
-                                                        borderTop:
-                                                            "1px solid #ffffff22"
-                                                    }}
-                                                >
-                                                    {owner.name}
-                                                </td>
-
-                                                <td
-                                                    style={{
-                                                        padding: "8px",
-                                                        borderTop:
-                                                            "1px solid #ffffff22"
-                                                    }}
-                                                >
-                                                    {owner.volk}
-                                                </td>
-
-                                                <td
-                                                    style={{
-                                                        padding: "8px",
-                                                        borderTop:
-                                                            "1px solid #ffffff22",
-                                                        textAlign: "center"
-                                                    }}
-                                                >
-                                                    {
-                                                        fleet.T1.toLocaleString(
-                                                            "de-DE"
-                                                        )
-                                                    }
-                                                </td>
-
-                                                <td
-                                                    style={{
-                                                        padding: "8px",
-                                                        borderTop:
-                                                            "1px solid #ffffff22",
-                                                        textAlign: "center"
-                                                    }}
-                                                >
-                                                    {
-                                                        fleet.T2.toLocaleString(
-                                                            "de-DE"
-                                                        )
-                                                    }
-                                                </td>
-
-                                                <td
-                                                    style={{
-                                                        padding: "8px",
-                                                        borderTop:
-                                                            "1px solid #ffffff22",
-                                                        textAlign: "center"
-                                                    }}
-                                                >
-                                                    {
-                                                        fleet.T3.toLocaleString(
-                                                            "de-DE"
-                                                        )
-                                                    }
-                                                </td>
-
-                                                <td
-                                                    style={{
-                                                        padding: "8px",
-                                                        borderTop:
-                                                            "1px solid #ffffff22",
-                                                        textAlign: "center"
-                                                    }}
-                                                >
-                                                    {
-                                                        fleet.S1.toLocaleString(
-                                                            "de-DE"
-                                                        )
-                                                    }
-                                                </td>
-
-                                                <td
-                                                    style={{
-                                                        padding: "8px",
-                                                        borderTop:
-                                                            "1px solid #ffffff22",
-                                                        textAlign: "center"
-                                                    }}
-                                                >
-                                                    {
-                                                        fleet.S2.toLocaleString(
-                                                            "de-DE"
-                                                        )
-                                                    }
-                                                </td>
-
-                                                <td
-                                                    style={{
-                                                        padding: "8px",
-                                                        borderTop:
-                                                            "1px solid #ffffff22",
-                                                        textAlign: "center"
-                                                    }}
-                                                >
-                                                    {
-                                                        fleet.S3.toLocaleString(
-                                                            "de-DE"
-                                                        )
-                                                    }
-                                                </td>
-
-                                                <td
-                                                    style={{
-                                                        padding: "8px",
-                                                        borderTop:
-                                                            "1px solid #ffffff22",
-                                                        textAlign: "right"
-                                                    }}
-                                                >
-                                                    {
-                                                        damage.attack.toLocaleString(
-                                                            "de-DE"
-                                                        )
-                                                    }
-                                                </td>
-
-                                                <td
-                                                    style={{
-                                                        padding: "8px",
-                                                        borderTop:
-                                                            "1px solid #ffffff22",
-                                                        textAlign: "right"
-                                                    }}
-                                                >
-                                                    {
-                                                        damage.buildingAttack.toLocaleString(
-                                                            "de-DE"
-                                                        )
-                                                    }
-                                                </td>
-
-                                                <td
-                                                    style={{
-                                                        padding: "8px",
-                                                        borderTop:
-                                                            "1px solid #ffffff22",
-                                                        textAlign: "center"
-                                                    }}
-                                                >
-                                                    <button
-                                                        onClick={() => {
-                                                            if(
-                                                                isEditing
-                                                            ){
-                                                                cancelEditing();
-                                                            }
-                                                            else{
-                                                                startEditing(
-                                                                    owner.id
-                                                                );
-                                                            }
-                                                        }}
-                                                    >
-                                                        {
-                                                            isEditing
-                                                                ? "Abbrechen"
-                                                                : "Bearbeiten"
-                                                        }
-                                                    </button>
-                                                </td>
-                                            </tr>
-
-                                            {
-                                                isEditing &&
-                                                editedFleet &&
-                                                editedDamage &&
-                                                <tr
-                                                    key={
-                                                        owner.id +
-                                                        "-edit"
-                                                    }
-                                                >
+                                                <tr>
                                                     <td
                                                         style={{
-                                                            padding: "8px",
+                                                            padding:"8px",
                                                             borderTop:
                                                                 "1px solid #ffffff22"
                                                         }}
-                                                    />
+                                                    >
+                                                        {owner.name}
+                                                    </td>
 
                                                     <td
                                                         style={{
-                                                            padding: "8px",
+                                                            padding:"8px",
                                                             borderTop:
                                                                 "1px solid #ffffff22"
                                                         }}
-                                                    />
-
-                                                    <td
-                                                        style={{
-                                                            padding: "8px",
-                                                            borderTop:
-                                                                "1px solid #ffffff22",
-                                                            textAlign: "center"
-                                                        }}
                                                     >
-                                                        <input
-                                                            type="number"
-                                                            min="0"
-                                                            value={
-                                                                getEditedValue(
-                                                                    owner.id,
-                                                                    "T1",
-                                                                    fleet.T1
-                                                                )
-                                                            }
-                                                            onChange={
-                                                                event => {
-                                                                    setFleetValue(
-                                                                        owner.id,
-                                                                        "T1",
-                                                                        Number(
-                                                                            event.target.value
-                                                                        )
-                                                                    );
-                                                                }
-                                                            }
-                                                            style={{
-                                                                width: "65px",
-                                                                textAlign: "center"
-                                                            }}
-                                                        />
+                                                        {owner.volk}
                                                     </td>
 
                                                     <td
                                                         style={{
-                                                            padding: "8px",
+                                                            padding:"8px",
                                                             borderTop:
                                                                 "1px solid #ffffff22",
-                                                            textAlign: "center"
-                                                        }}
-                                                    >
-                                                        <input
-                                                            type="number"
-                                                            min="0"
-                                                            value={
-                                                                getEditedValue(
-                                                                    owner.id,
-                                                                    "T2",
-                                                                    fleet.T2
-                                                                )
-                                                            }
-                                                            onChange={
-                                                                event => {
-                                                                    setFleetValue(
-                                                                        owner.id,
-                                                                        "T2",
-                                                                        Number(
-                                                                            event.target.value
-                                                                        )
-                                                                    );
-                                                                }
-                                                            }
-                                                            style={{
-                                                                width: "65px",
-                                                                textAlign: "center"
-                                                            }}
-                                                        />
-                                                    </td>
-
-                                                    <td
-                                                        style={{
-                                                            padding: "8px",
-                                                            borderTop:
-                                                                "1px solid #ffffff22",
-                                                            textAlign: "center"
-                                                        }}
-                                                    >
-                                                        <input
-                                                            type="number"
-                                                            min="0"
-                                                            value={
-                                                                getEditedValue(
-                                                                    owner.id,
-                                                                    "T3",
-                                                                    fleet.T3
-                                                                )
-                                                            }
-                                                            onChange={
-                                                                event => {
-                                                                    setFleetValue(
-                                                                        owner.id,
-                                                                        "T3",
-                                                                        Number(
-                                                                            event.target.value
-                                                                        )
-                                                                    );
-                                                                }
-                                                            }
-                                                            style={{
-                                                                width: "65px",
-                                                                textAlign: "center"
-                                                            }}
-                                                        />
-                                                    </td>
-
-                                                    <td
-                                                        style={{
-                                                            padding: "8px",
-                                                            borderTop:
-                                                                "1px solid #ffffff22",
-                                                            textAlign: "center"
-                                                        }}
-                                                    >
-                                                        <input
-                                                            type="number"
-                                                            min="0"
-                                                            value={
-                                                                getEditedValue(
-                                                                    owner.id,
-                                                                    "S1",
-                                                                    fleet.S1
-                                                                )
-                                                            }
-                                                            onChange={
-                                                                event => {
-                                                                    setFleetValue(
-                                                                        owner.id,
-                                                                        "S1",
-                                                                        Number(
-                                                                            event.target.value
-                                                                        )
-                                                                    );
-                                                                }
-                                                            }
-                                                            style={{
-                                                                width: "65px",
-                                                                textAlign: "center"
-                                                            }}
-                                                        />
-                                                    </td>
-
-                                                    <td
-                                                        style={{
-                                                            padding: "8px",
-                                                            borderTop:
-                                                                "1px solid #ffffff22",
-                                                            textAlign: "center"
-                                                        }}
-                                                    >
-                                                        <input
-                                                            type="number"
-                                                            min="0"
-                                                            value={
-                                                                getEditedValue(
-                                                                    owner.id,
-                                                                    "S2",
-                                                                    fleet.S2
-                                                                )
-                                                            }
-                                                            onChange={
-                                                                event => {
-                                                                    setFleetValue(
-                                                                        owner.id,
-                                                                        "S2",
-                                                                        Number(
-                                                                            event.target.value
-                                                                        )
-                                                                    );
-                                                                }
-                                                            }
-                                                            style={{
-                                                                width: "65px",
-                                                                textAlign: "center"
-                                                            }}
-                                                        />
-                                                    </td>
-
-                                                    <td
-                                                        style={{
-                                                            padding: "8px",
-                                                            borderTop:
-                                                                "1px solid #ffffff22",
-                                                            textAlign: "center"
-                                                        }}
-                                                    >
-                                                        <input
-                                                            type="number"
-                                                            min="0"
-                                                            value={
-                                                                getEditedValue(
-                                                                    owner.id,
-                                                                    "S3",
-                                                                    fleet.S3
-                                                                )
-                                                            }
-                                                            onChange={
-                                                                event => {
-                                                                    setFleetValue(
-                                                                        owner.id,
-                                                                        "S3",
-                                                                        Number(
-                                                                            event.target.value
-                                                                        )
-                                                                    );
-                                                                }
-                                                            }
-                                                            style={{
-                                                                width: "65px",
-                                                                textAlign: "center"
-                                                            }}
-                                                        />
-                                                    </td>
-
-                                                    <td
-                                                        style={{
-                                                            padding: "8px",
-                                                            borderTop:
-                                                                "1px solid #ffffff22",
-                                                            textAlign: "right",
-                                                            fontWeight: "bold"
+                                                            textAlign:"center"
                                                         }}
                                                     >
                                                         {
-                                                            editedDamage.attack.toLocaleString(
+                                                            fleet.T1.toLocaleString(
                                                                 "de-DE"
                                                             )
                                                         }
@@ -946,15 +872,14 @@ export default function FleetWindow({
 
                                                     <td
                                                         style={{
-                                                            padding: "8px",
+                                                            padding:"8px",
                                                             borderTop:
                                                                 "1px solid #ffffff22",
-                                                            textAlign: "right",
-                                                            fontWeight: "bold"
+                                                            textAlign:"center"
                                                         }}
                                                     >
                                                         {
-                                                            editedDamage.buildingAttack.toLocaleString(
+                                                            fleet.T2.toLocaleString(
                                                                 "de-DE"
                                                             )
                                                         }
@@ -962,39 +887,430 @@ export default function FleetWindow({
 
                                                     <td
                                                         style={{
-                                                            padding: "8px",
+                                                            padding:"8px",
                                                             borderTop:
                                                                 "1px solid #ffffff22",
-                                                            textAlign: "center"
+                                                            textAlign:"center"
                                                         }}
                                                     >
-                                                        <div
-                                                            style={{
-                                                                display: "flex",
-                                                                gap: "6px",
-                                                                justifyContent: "center"
-                                                            }}
-                                                        >
-                                                            <button
-                                                                onClick={() => {
-                                                                    saveFleet(
+                                                        {
+                                                            fleet.T3.toLocaleString(
+                                                                "de-DE"
+                                                            )
+                                                        }
+                                                    </td>
+
+                                                    <td
+                                                        style={{
+                                                            padding:"8px",
+                                                            borderTop:
+                                                                "1px solid #ffffff22",
+                                                            textAlign:"center"
+                                                        }}
+                                                    >
+                                                        {
+                                                            fleet.S1.toLocaleString(
+                                                                "de-DE"
+                                                            )
+                                                        }
+                                                    </td>
+
+                                                    <td
+                                                        style={{
+                                                            padding:"8px",
+                                                            borderTop:
+                                                                "1px solid #ffffff22",
+                                                            textAlign:"center"
+                                                        }}
+                                                    >
+                                                        {
+                                                            fleet.S2.toLocaleString(
+                                                                "de-DE"
+                                                            )
+                                                        }
+                                                    </td>
+
+                                                    <td
+                                                        style={{
+                                                            padding:"8px",
+                                                            borderTop:
+                                                                "1px solid #ffffff22",
+                                                            textAlign:"center"
+                                                        }}
+                                                    >
+                                                        {
+                                                            fleet.S3.toLocaleString(
+                                                                "de-DE"
+                                                            )
+                                                        }
+                                                    </td>
+
+                                                    <td
+                                                        style={{
+                                                            padding:"8px",
+                                                            borderTop:
+                                                                "1px solid #ffffff22",
+                                                            textAlign:"right"
+                                                        }}
+                                                    >
+                                                        {
+                                                            damage.attack.toLocaleString(
+                                                                "de-DE"
+                                                            )
+                                                        }
+                                                    </td>
+
+                                                    <td
+                                                        style={{
+                                                            padding:"8px",
+                                                            borderTop:
+                                                                "1px solid #ffffff22",
+                                                            textAlign:"right"
+                                                        }}
+                                                    >
+                                                        {
+                                                            damage.buildingAttack.toLocaleString(
+                                                                "de-DE"
+                                                            )
+                                                        }
+                                                    </td>
+
+                                                    <td
+                                                        style={{
+                                                            padding:"8px",
+                                                            borderTop:
+                                                                "1px solid #ffffff22",
+                                                            textAlign:"center"
+                                                        }}
+                                                    >
+                                                        <button
+                                                            onClick={() => {
+                                                                if(
+                                                                    isEditing
+                                                                ){
+                                                                    cancelEditing();
+                                                                }
+                                                                else{
+                                                                    startEditing(
                                                                         owner.id
                                                                     );
-                                                                }}
-                                                            >
-                                                                Speichern
-                                                            </button>
-                                                        </div>
+                                                                }
+                                                            }}
+                                                        >
+                                                            {
+                                                                isEditing
+                                                                    ? "Abbrechen"
+                                                                    : "Bearbeiten"
+                                                            }
+                                                        </button>
                                                     </td>
                                                 </tr>
-                                            }
-                                        </>
-                                    );
-                                }
-                            )
-                        }
-                    </tbody>
-                </table>
+
+                                                {
+                                                    isEditing &&
+                                                    editedFleet &&
+                                                    editedDamage &&
+                                                    <tr>
+                                                        <td
+                                                            style={{
+                                                                padding:"8px",
+                                                                borderTop:
+                                                                    "1px solid #ffffff22"
+                                                            }}
+                                                        />
+
+                                                        <td
+                                                            style={{
+                                                                padding:"8px",
+                                                                borderTop:
+                                                                    "1px solid #ffffff22"
+                                                            }}
+                                                        />
+
+                                                        <td
+                                                            style={{
+                                                                padding:"8px",
+                                                                borderTop:
+                                                                    "1px solid #ffffff22",
+                                                                textAlign:"center"
+                                                            }}
+                                                        >
+                                                            <input
+                                                                type="number"
+                                                                min="0"
+                                                                value={
+                                                                    getEditedValue(
+                                                                        owner.id,
+                                                                        "T1",
+                                                                        fleet.T1
+                                                                    )
+                                                                }
+                                                                onChange={
+                                                                    event => {
+                                                                        setFleetValue(
+                                                                            owner.id,
+                                                                            "T1",
+                                                                            Number(
+                                                                                event.target.value
+                                                                            )
+                                                                        );
+                                                                    }
+                                                                }
+                                                                style={{
+                                                                    width:"65px",
+                                                                    textAlign:"center"
+                                                                }}
+                                                            />
+                                                        </td>
+
+                                                        <td
+                                                            style={{
+                                                                padding:"8px",
+                                                                borderTop:
+                                                                    "1px solid #ffffff22",
+                                                                textAlign:"center"
+                                                            }}
+                                                        >
+                                                            <input
+                                                                type="number"
+                                                                min="0"
+                                                                value={
+                                                                    getEditedValue(
+                                                                        owner.id,
+                                                                        "T2",
+                                                                        fleet.T2
+                                                                    )
+                                                                }
+                                                                onChange={
+                                                                    event => {
+                                                                        setFleetValue(
+                                                                            owner.id,
+                                                                            "T2",
+                                                                            Number(
+                                                                                event.target.value
+                                                                            )
+                                                                        );
+                                                                    }
+                                                                }
+                                                                style={{
+                                                                    width:"65px",
+                                                                    textAlign:"center"
+                                                                }}
+                                                            />
+                                                        </td>
+
+                                                        <td
+                                                            style={{
+                                                                padding:"8px",
+                                                                borderTop:
+                                                                    "1px solid #ffffff22",
+                                                                textAlign:"center"
+                                                            }}
+                                                        >
+                                                            <input
+                                                                type="number"
+                                                                min="0"
+                                                                value={
+                                                                    getEditedValue(
+                                                                        owner.id,
+                                                                        "T3",
+                                                                        fleet.T3
+                                                                    )
+                                                                }
+                                                                onChange={
+                                                                    event => {
+                                                                        setFleetValue(
+                                                                            owner.id,
+                                                                            "T3",
+                                                                            Number(
+                                                                                event.target.value
+                                                                            )
+                                                                        );
+                                                                    }
+                                                                }
+                                                                style={{
+                                                                    width:"65px",
+                                                                    textAlign:"center"
+                                                                }}
+                                                            />
+                                                        </td>
+
+                                                        <td
+                                                            style={{
+                                                                padding:"8px",
+                                                                borderTop:
+                                                                    "1px solid #ffffff22",
+                                                                textAlign:"center"
+                                                            }}
+                                                        >
+                                                            <input
+                                                                type="number"
+                                                                min="0"
+                                                                value={
+                                                                    getEditedValue(
+                                                                        owner.id,
+                                                                        "S1",
+                                                                        fleet.S1
+                                                                    )
+                                                                }
+                                                                onChange={
+                                                                    event => {
+                                                                        setFleetValue(
+                                                                            owner.id,
+                                                                            "S1",
+                                                                            Number(
+                                                                                event.target.value
+                                                                            )
+                                                                        );
+                                                                    }
+                                                                }
+                                                                style={{
+                                                                    width:"65px",
+                                                                    textAlign:"center"
+                                                                }}
+                                                            />
+                                                        </td>
+
+                                                        <td
+                                                            style={{
+                                                                padding:"8px",
+                                                                borderTop:
+                                                                    "1px solid #ffffff22",
+                                                                textAlign:"center"
+                                                            }}
+                                                        >
+                                                            <input
+                                                                type="number"
+                                                                min="0"
+                                                                value={
+                                                                    getEditedValue(
+                                                                        owner.id,
+                                                                        "S2",
+                                                                        fleet.S2
+                                                                    )
+                                                                }
+                                                                onChange={
+                                                                    event => {
+                                                                        setFleetValue(
+                                                                            owner.id,
+                                                                            "S2",
+                                                                            Number(
+                                                                                event.target.value
+                                                                            )
+                                                                        );
+                                                                    }
+                                                                }
+                                                                style={{
+                                                                    width:"65px",
+                                                                    textAlign:"center"
+                                                                }}
+                                                            />
+                                                        </td>
+
+                                                        <td
+                                                            style={{
+                                                                padding:"8px",
+                                                                borderTop:
+                                                                    "1px solid #ffffff22",
+                                                                textAlign:"center"
+                                                            }}
+                                                        >
+                                                            <input
+                                                                type="number"
+                                                                min="0"
+                                                                value={
+                                                                    getEditedValue(
+                                                                        owner.id,
+                                                                        "S3",
+                                                                        fleet.S3
+                                                                    )
+                                                                }
+                                                                onChange={
+                                                                    event => {
+                                                                        setFleetValue(
+                                                                            owner.id,
+                                                                            "S3",
+                                                                            Number(
+                                                                                event.target.value
+                                                                            )
+                                                                        );
+                                                                    }
+                                                                }
+                                                                style={{
+                                                                    width:"65px",
+                                                                    textAlign:"center"
+                                                                }}
+                                                            />
+                                                        </td>
+
+                                                        <td
+                                                            style={{
+                                                                padding:"8px",
+                                                                borderTop:
+                                                                    "1px solid #ffffff22",
+                                                                textAlign:"right",
+                                                                fontWeight:"bold"
+                                                            }}
+                                                        >
+                                                            {
+                                                                editedDamage.attack.toLocaleString(
+                                                                    "de-DE"
+                                                                )
+                                                            }
+                                                        </td>
+
+                                                        <td
+                                                            style={{
+                                                                padding:"8px",
+                                                                borderTop:
+                                                                    "1px solid #ffffff22",
+                                                                textAlign:"right",
+                                                                fontWeight:"bold"
+                                                            }}
+                                                        >
+                                                            {
+                                                                editedDamage.buildingAttack.toLocaleString(
+                                                                    "de-DE"
+                                                                )
+                                                            }
+                                                        </td>
+
+                                                        <td
+                                                            style={{
+                                                                padding:"8px",
+                                                                borderTop:
+                                                                    "1px solid #ffffff22",
+                                                                textAlign:"center"
+                                                            }}
+                                                        >
+                                                            <div
+                                                                style={{
+                                                                    display:"flex",
+                                                                    gap:"6px",
+                                                                    justifyContent:"center"
+                                                                }}
+                                                            >
+                                                                <button
+                                                                    onClick={() => {
+                                                                        saveFleet(
+                                                                            owner.id
+                                                                        );
+                                                                    }}
+                                                                >
+                                                                    Speichern
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </Fragment>
+                                        );
+                                    }
+                                )
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </Panel>
     );

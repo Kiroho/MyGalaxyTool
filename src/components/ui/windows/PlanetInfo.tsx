@@ -766,7 +766,7 @@ export default function PlanetInfo() {
                         }
                         style={{
                             padding: 2,
-                            background: "#6b2020",
+                            background: "#a81b1b",
                             color: "white"
                         }}
                     >

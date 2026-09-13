@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Panel from "../Panel";
 import { useUIStore } from "../../../store/uiStore";
 import InputTabs from "./InputTabs";
 import type { InputMode } from "./InputTabs";
 import { usePlanetStore } from "../../../store/planetStore";
+import { useOwnerStore } from "../../../store/ownerStore";
 import { addressToXYZ } from "../../../utils/address";
 import XYZDisplay from "./XYZDisplay";
 
@@ -28,6 +29,10 @@ export default function FlightTimeWindow({
 
     const planets = usePlanetStore(
         state => state.planets
+    );
+
+    const owners = useOwnerStore(
+        state => state.owners
     );
 
     const [startMode, setStartMode] =
@@ -64,6 +69,24 @@ export default function FlightTimeWindow({
             z: ""
         });
 
+    const [startPlanetId, setStartPlanetId] =
+        useState("");
+
+    const [targetPlanetId, setTargetPlanetId] =
+        useState("");
+
+    const [startPlanetDropdownOpen, setStartPlanetDropdownOpen] =
+        useState(false);
+
+    const [targetPlanetDropdownOpen, setTargetPlanetDropdownOpen] =
+        useState(false);
+
+    const [startKeyboardIndex, setStartKeyboardIndex] =
+        useState(-1);
+
+    const [targetKeyboardIndex, setTargetKeyboardIndex] =
+        useState(-1);
+
     const [speed, setSpeed] =
         useState<number | "">("");
 
@@ -72,6 +95,85 @@ export default function FlightTimeWindow({
 
     const [flightTime, setFlightTime] =
         useState("");
+
+    const lastStartSearchKey =
+        useRef("");
+
+    const lastStartSearchIndex =
+        useRef(-1);
+
+    const lastTargetSearchKey =
+        useRef("");
+
+    const lastTargetSearchIndex =
+        useRef(-1);
+
+    const startPlanetDropdownRef =
+        useRef<HTMLDivElement>(null);
+
+    const targetPlanetDropdownRef =
+        useRef<HTMLDivElement>(null);
+
+    const startPlanetOptionRefs =
+        useRef<Record<string, HTMLDivElement | null>>({});
+
+    const targetPlanetOptionRefs =
+        useRef<Record<string, HTMLDivElement | null>>({});
+
+    const sortedPlanets =
+        useMemo(
+            () =>
+                [...planets].sort(
+                    (a, b) => {
+                        const ownerA =
+                            owners.find(
+                                owner =>
+                                    owner.id ===
+                                    a.owner_id
+                            );
+
+                        const ownerB =
+                            owners.find(
+                                owner =>
+                                    owner.id ===
+                                    b.owner_id
+                            );
+
+                        const ownerComparison =
+                            (
+                                ownerA?.name ??
+                                "Unbekannt"
+                            ).localeCompare(
+                                ownerB?.name ??
+                                "Unbekannt",
+                                "de",
+                                {
+                                    sensitivity:
+                                        "base"
+                                }
+                            );
+
+                        if(
+                            ownerComparison !== 0
+                        ){
+                            return ownerComparison;
+                        }
+
+                        return a.name.localeCompare(
+                            b.name,
+                            "de",
+                            {
+                                sensitivity:
+                                    "base"
+                            }
+                        );
+                    }
+                ),
+            [
+                planets,
+                owners
+            ]
+        );
 
     const updateAddressPoint = (
         point: "start" | "target",
@@ -123,7 +225,9 @@ export default function FlightTimeWindow({
     ) => {
         const planet =
             planets.find(
-                planet => planet.id === planetId
+                planet =>
+                    planet.id ===
+                    planetId
             );
 
         if(!planet){
@@ -131,12 +235,20 @@ export default function FlightTimeWindow({
         }
 
         if(point === "start"){
+            setStartPlanetId(
+                planet.id
+            );
+
             setStartPoint({
                 x: planet.x,
                 y: planet.y,
                 z: planet.z
             });
         }else{
+            setTargetPlanetId(
+                planet.id
+            );
+
             setTargetPoint({
                 x: planet.x,
                 y: planet.y,
@@ -144,6 +256,406 @@ export default function FlightTimeWindow({
             });
         }
     };
+
+    const resetStartKeyboardSearch = () => {
+        lastStartSearchKey.current =
+            "";
+
+        lastStartSearchIndex.current =
+            -1;
+    };
+
+    const resetTargetKeyboardSearch = () => {
+        lastTargetSearchKey.current =
+            "";
+
+        lastTargetSearchIndex.current =
+            -1;
+    };
+
+    const closeStartDropdown = () => {
+        setStartPlanetDropdownOpen(
+            false
+        );
+
+        setStartKeyboardIndex(
+            -1
+        );
+
+        resetStartKeyboardSearch();
+    };
+
+    const closeTargetDropdown = () => {
+        setTargetPlanetDropdownOpen(
+            false
+        );
+
+        setTargetKeyboardIndex(
+            -1
+        );
+
+        resetTargetKeyboardSearch();
+    };
+
+    const confirmStartKeyboardSelection = () => {
+        if(
+            startKeyboardIndex < 0 ||
+            startKeyboardIndex >=
+                sortedPlanets.length
+        ){
+            return;
+        }
+
+        const planet =
+            sortedPlanets[
+                startKeyboardIndex
+            ];
+
+        selectPlanetPoint(
+            "start",
+            planet.id
+        );
+
+        closeStartDropdown();
+    };
+
+    const confirmTargetKeyboardSelection = () => {
+        if(
+            targetKeyboardIndex < 0 ||
+            targetKeyboardIndex >=
+                sortedPlanets.length
+        ){
+            return;
+        }
+
+        const planet =
+            sortedPlanets[
+                targetKeyboardIndex
+            ];
+
+        selectPlanetPoint(
+            "target",
+            planet.id
+        );
+
+        closeTargetDropdown();
+    };
+
+    const handleStartPlanetKeyDown = (
+        event: React.KeyboardEvent<HTMLDivElement>
+    ) => {
+        if(
+            sortedPlanets.length === 0
+        ){
+            return;
+        }
+
+        if(event.key === "ArrowDown"){
+            event.preventDefault();
+
+            setStartKeyboardIndex(
+                prev =>
+                    prev < 0
+                        ? 0
+                        : (
+                            prev + 1
+                        ) %
+                        sortedPlanets.length
+            );
+
+            resetStartKeyboardSearch();
+
+            return;
+        }
+
+        if(event.key === "ArrowUp"){
+            event.preventDefault();
+
+            setStartKeyboardIndex(
+                prev =>
+                    prev < 0
+                        ? sortedPlanets.length - 1
+                        : (
+                            prev -
+                            1 +
+                            sortedPlanets.length
+                        ) %
+                        sortedPlanets.length
+            );
+
+            resetStartKeyboardSearch();
+
+            return;
+        }
+
+        if(event.key === "Enter"){
+            event.preventDefault();
+
+            confirmStartKeyboardSelection();
+
+            return;
+        }
+
+        if(event.key === "Escape"){
+            event.preventDefault();
+
+            closeStartDropdown();
+
+            return;
+        }
+
+        if(
+            !/^[a-zA-ZäöüÄÖÜß]$/.test(
+                event.key
+            )
+        ){
+            return;
+        }
+
+        const searchKey =
+            event.key.toLocaleLowerCase(
+                "de"
+            );
+
+        const matchingIndices =
+            sortedPlanets
+                .map(
+                    (
+                        planet,
+                        index
+                    ) => ({
+                        planet,
+                        index
+                    })
+                )
+                .filter(
+                    item =>
+                        item.planet.name
+                            .toLocaleLowerCase(
+                                "de"
+                            )
+                            .startsWith(
+                                searchKey
+                            )
+                );
+
+        if(
+            matchingIndices.length === 0
+        ){
+            return;
+        }
+
+        let nextIndex = 0;
+
+        if(
+            lastStartSearchKey.current ===
+            searchKey
+        ){
+            nextIndex =
+                (
+                    lastStartSearchIndex.current +
+                    1
+                ) %
+                matchingIndices.length;
+        }
+
+        const matchingItem =
+            matchingIndices[
+                nextIndex
+            ];
+
+        setStartKeyboardIndex(
+            matchingItem.index
+        );
+
+        lastStartSearchKey.current =
+            searchKey;
+
+        lastStartSearchIndex.current =
+            nextIndex;
+    };
+
+    const handleTargetPlanetKeyDown = (
+        event: React.KeyboardEvent<HTMLDivElement>
+    ) => {
+        if(
+            sortedPlanets.length === 0
+        ){
+            return;
+        }
+
+        if(event.key === "ArrowDown"){
+            event.preventDefault();
+
+            setTargetKeyboardIndex(
+                prev =>
+                    prev < 0
+                        ? 0
+                        : (
+                            prev + 1
+                        ) %
+                        sortedPlanets.length
+            );
+
+            resetTargetKeyboardSearch();
+
+            return;
+        }
+
+        if(event.key === "ArrowUp"){
+            event.preventDefault();
+
+            setTargetKeyboardIndex(
+                prev =>
+                    prev < 0
+                        ? sortedPlanets.length - 1
+                        : (
+                            prev -
+                            1 +
+                            sortedPlanets.length
+                        ) %
+                        sortedPlanets.length
+            );
+
+            resetTargetKeyboardSearch();
+
+            return;
+        }
+
+        if(event.key === "Enter"){
+            event.preventDefault();
+
+            confirmTargetKeyboardSelection();
+
+            return;
+        }
+
+        if(event.key === "Escape"){
+            event.preventDefault();
+
+            closeTargetDropdown();
+
+            return;
+        }
+
+        if(
+            !/^[a-zA-ZäöüÄÖÜß]$/.test(
+                event.key
+            )
+        ){
+            return;
+        }
+
+        const searchKey =
+            event.key.toLocaleLowerCase(
+                "de"
+            );
+
+        const matchingIndices =
+            sortedPlanets
+                .map(
+                    (
+                        planet,
+                        index
+                    ) => ({
+                        planet,
+                        index
+                    })
+                )
+                .filter(
+                    item =>
+                        item.planet.name
+                            .toLocaleLowerCase(
+                                "de"
+                            )
+                            .startsWith(
+                                searchKey
+                            )
+                );
+
+        if(
+            matchingIndices.length === 0
+        ){
+            return;
+        }
+
+        let nextIndex = 0;
+
+        if(
+            lastTargetSearchKey.current ===
+            searchKey
+        ){
+            nextIndex =
+                (
+                    lastTargetSearchIndex.current +
+                    1
+                ) %
+                matchingIndices.length;
+        }
+
+        const matchingItem =
+            matchingIndices[
+                nextIndex
+            ];
+
+        setTargetKeyboardIndex(
+            matchingItem.index
+        );
+
+        lastTargetSearchKey.current =
+            searchKey;
+
+        lastTargetSearchIndex.current =
+            nextIndex;
+    };
+
+    useEffect(() => {
+        if(
+            startKeyboardIndex < 0 ||
+            startKeyboardIndex >=
+                sortedPlanets.length
+        ){
+            return;
+        }
+
+        const planet =
+            sortedPlanets[
+                startKeyboardIndex
+            ];
+
+        startPlanetOptionRefs.current[
+            planet.id
+        ]?.scrollIntoView({
+            block: "nearest"
+        });
+    }, [
+        startKeyboardIndex,
+        sortedPlanets
+    ]);
+
+    useEffect(() => {
+        if(
+            targetKeyboardIndex < 0 ||
+            targetKeyboardIndex >=
+                sortedPlanets.length
+        ){
+            return;
+        }
+
+        const planet =
+            sortedPlanets[
+                targetKeyboardIndex
+            ];
+
+        targetPlanetOptionRefs.current[
+            planet.id
+        ]?.scrollIntoView({
+            block: "nearest"
+        });
+    }, [
+        targetKeyboardIndex,
+        sortedPlanets
+    ]);
 
     const calculate = () => {
         if(
@@ -174,20 +686,26 @@ export default function FlightTimeWindow({
             );
 
         const lightyearDistance =
-            coordinateDistance * COORDINATE_TO_LY;
+            coordinateDistance *
+            COORDINATE_TO_LY;
 
         setDistance(
             lightyearDistance
         );
 
-        if(speed === "" || speed <= 0){
+        if(
+            speed === "" ||
+            speed <= 0
+        ){
             setFlightTime("");
+
             return;
         }
 
         const totalSeconds =
             Math.floor(
-                lightyearDistance * speed
+                lightyearDistance *
+                speed
             );
 
         const hours =
@@ -197,11 +715,15 @@ export default function FlightTimeWindow({
 
         const minutes =
             Math.floor(
-                (totalSeconds % 3600) / 60
+                (
+                    totalSeconds %
+                    3600
+                ) / 60
             );
 
         const seconds =
-            totalSeconds % 60;
+            totalSeconds %
+            60;
 
         setFlightTime(
             `${hours
@@ -230,53 +752,83 @@ export default function FlightTimeWindow({
         return (
             <div
                 style={{
-                    display: "flex",
-                    gap: "10px",
-                    marginTop: "20px",
-                    marginBottom: "40px"
+                    display:
+                        "flex",
+                    gap:
+                        "10px",
+                    marginTop:
+                        "20px",
+                    marginBottom:
+                        "40px"
                 }}
             >
                 {
-                    (["x", "y", "z"] as const).map(axis => (
-                        <div
-                            key={axis}
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "5px"
-                            }}
-                        >
-                            <label>
-                                {axis.toUpperCase()}:
-                            </label>
-
-                            <input
-                                type="number"
-                                placeholder={
-                                    point === "start"
-                                        ? "100"
-                                        : "200"
+                    (
+                        [
+                            "x",
+                            "y",
+                            "z"
+                        ] as const
+                    ).map(
+                        axis => (
+                            <div
+                                key={
+                                    axis
                                 }
                                 style={{
-                                    width: "80px"
+                                    display:
+                                        "flex",
+                                    alignItems:
+                                        "center",
+                                    gap:
+                                        "5px"
                                 }}
-                                value={
-                                    values[axis]
-                                }
-                                onChange={event => {
-                                    updatePoint(
-                                        point,
-                                        axis,
-                                        event.target.value === ""
-                                            ? ""
-                                            : Number(
-                                                event.target.value
-                                            )
-                                    );
-                                }}
-                            />
-                        </div>
-                    ))
+                            >
+                                <label>
+                                    {
+                                        axis.toUpperCase()
+                                    }:
+                                </label>
+
+                                <input
+                                    type="number"
+                                    placeholder={
+                                        point ===
+                                        "start"
+                                            ? "100"
+                                            : "200"
+                                    }
+                                    style={{
+                                        width:
+                                            "80px"
+                                    }}
+                                    value={
+                                        values[
+                                            axis
+                                        ]
+                                    }
+                                    onChange={
+                                        event => {
+                                            updatePoint(
+                                                point,
+                                                axis,
+                                                event
+                                                    .target
+                                                    .value ===
+                                                    ""
+                                                    ? ""
+                                                    : Number(
+                                                        event
+                                                            .target
+                                                            .value
+                                                    )
+                                            );
+                                        }
+                                    }
+                                />
+                            </div>
+                        )
+                    )
                 }
             </div>
         );
@@ -286,30 +838,70 @@ export default function FlightTimeWindow({
         return null;
     }
 
+    const selectedStartPlanet =
+        planets.find(
+            planet =>
+                planet.id ===
+                startPlanetId
+        );
+
+    const selectedStartPlanetOwner =
+        owners.find(
+            owner =>
+                owner.id ===
+                selectedStartPlanet?.owner_id
+        );
+
+    const selectedTargetPlanet =
+        planets.find(
+            planet =>
+                planet.id ===
+                targetPlanetId
+        );
+
+    const selectedTargetPlanetOwner =
+        owners.find(
+            owner =>
+                owner.id ===
+                selectedTargetPlanet?.owner_id
+        );
+
     const resultExtension =
         distance !== null && (
             <div
                 style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "10px"
+                    display:
+                        "flex",
+                    flexDirection:
+                        "column",
+                    gap:
+                        "10px"
                 }}
             >
                 <div>
                     Entfernung:
                     <strong>
                         {" "}
-                        {distance.toFixed(2)} lj
+                        {
+                            distance.toFixed(
+                                2
+                            )
+                        }{" "}
+                        lj
                     </strong>
                 </div>
 
                 {
-                    flightTime && (
+                    flightTime &&
+                    (
                         <div>
                             Flugzeit:
                             <strong>
                                 {" "}
-                                {flightTime} h
+                                {
+                                    flightTime
+                                }{" "}
+                                h
                             </strong>
                         </div>
                     )
@@ -324,199 +916,648 @@ export default function FlightTimeWindow({
             defaultHeight={500}
             initialX={700}
             initialY={100}
-            onClose={closeFlightTimeWindow}
+            onClose={
+                closeFlightTimeWindow
+            }
             onFocus={onFocus}
             zIndex={zIndex}
-            extension={resultExtension}
+            extension={
+                resultExtension
+            }
+            overflowVisible
         >
             <h4
                 style={{
-                    marginBottom: "5px"
+                    marginBottom:
+                        "5px"
                 }}
             >
                 Startpunkt
             </h4>
 
             <InputTabs
-                value={startMode}
-                onChange={setStartMode}
+                value={
+                    startMode
+                }
+                onChange={
+                    setStartMode
+                }
             />
 
             {
                 startMode === "xyz" &&
-                renderXYZInput("start")
+                renderXYZInput(
+                    "start"
+                )
             }
 
             {
                 startMode === "address" &&
-                <div
-                    style={{
-                        marginTop: "20px",
-                        marginBottom: "40px"
-                    }}
-                >
-                    <input
-                        placeholder="Adresse eingeben"
-                        value={startAddress}
-                        onChange={event => {
-                            const value =
-                                event.target.value;
-
-                            setStartAddress(value);
-
-                            updateAddressPoint(
-                                "start",
-                                value
-                            );
+                (
+                    <div
+                        style={{
+                            marginTop:
+                                "20px",
+                            marginBottom:
+                                "40px"
                         }}
-                    />
+                    >
+                        <input
+                            placeholder="Adresse eingeben"
+                            value={
+                                startAddress
+                            }
+                            onChange={
+                                event => {
+                                    const value =
+                                        event
+                                            .target
+                                            .value;
 
-                    <XYZDisplay
-                        x={startPoint.x}
-                        y={startPoint.y}
-                        z={startPoint.z}
-                    />
-                </div>
+                                    setStartAddress(
+                                        value
+                                    );
+
+                                    updateAddressPoint(
+                                        "start",
+                                        value
+                                    );
+                                }
+                            }
+                        />
+
+                        <XYZDisplay
+                            x={
+                                startPoint.x
+                            }
+                            y={
+                                startPoint.y
+                            }
+                            z={
+                                startPoint.z
+                            }
+                        />
+                    </div>
+                )
             }
 
             {
                 startMode === "planet" &&
-                <div
-                    style={{
-                        marginTop: "20px",
-                        marginBottom: "40px"
-                    }}
-                >
-                    <select
-                        onChange={event => {
-                            selectPlanetPoint(
-                                "start",
-                                event.target.value
-                            );
+                (
+                    <div
+                        style={{
+                            marginTop:
+                                "20px",
+                            marginBottom:
+                                "40px"
                         }}
                     >
-                        <option value="">
-                            Planet auswählen
-                        </option>
+                        <div
+                            style={{
+                                position:
+                                    "relative",
+                                width:
+                                    "200px"
+                            }}
+                        >
+                            <button
+                                onClick={() => {
+                                    if(
+                                        startPlanetDropdownOpen
+                                    ){
+                                        closeStartDropdown();
 
-                        {
-                            planets.map(planet => (
-                                <option
-                                    key={planet.id}
-                                    value={planet.id}
-                                >
-                                    {planet.name}
-                                </option>
-                            ))
-                        }
-                    </select>
+                                        return;
+                                    }
 
-                    <XYZDisplay
-                        x={startPoint.x}
-                        y={startPoint.y}
-                        z={startPoint.z}
-                    />
-                </div>
+                                    setStartKeyboardIndex(
+                                        -1
+                                    );
+
+                                    resetStartKeyboardSearch();
+
+                                    setStartPlanetDropdownOpen(
+                                        true
+                                    );
+
+                                    window.setTimeout(
+                                        () => {
+                                            startPlanetDropdownRef.current?.focus();
+                                        },
+                                        0
+                                    );
+                                }}
+                                style={{
+                                    width:
+                                        "100%",
+                                    padding:
+                                        "2px 8px",
+                                    cursor:
+                                        "pointer",
+                                    textAlign:
+                                        "left",
+                                    boxSizing:
+                                        "border-box"
+                                }}
+                            >
+                                {
+                                    selectedStartPlanet
+                                        ? (
+                                            <span
+                                                style={{
+                                                    display:
+                                                        "flex",
+                                                    alignItems:
+                                                        "center",
+                                                    gap:
+                                                        "6px"
+                                                }}
+                                            >
+                                                <span
+                                                    style={{
+                                                        width:
+                                                            "12px",
+                                                        height:
+                                                            "12px",
+                                                        borderRadius:
+                                                            "50%",
+                                                        background:
+                                                            selectedStartPlanetOwner?.color ??
+                                                            "white",
+                                                        flexShrink:
+                                                            0
+                                                    }}
+                                                />
+
+                                                {
+                                                    selectedStartPlanet.name
+                                                }
+                                            </span>
+                                        )
+                                        : "Planet auswählen"
+                                }
+                            </button>
+
+                            {
+                                startPlanetDropdownOpen &&
+                                (
+                                    <div
+                                        ref={
+                                            startPlanetDropdownRef
+                                        }
+                                        tabIndex={
+                                            0
+                                        }
+                                        onKeyDown={
+                                            handleStartPlanetKeyDown
+                                        }
+                                        style={{
+                                            position:
+                                                "absolute",
+                                            top:
+                                                "100%",
+                                            left:
+                                                0,
+                                            width:
+                                                "100%",
+                                            background:
+                                                "#102544",
+                                            border:
+                                                "1px solid #ffffff33",
+                                            padding:
+                                                "8px",
+                                            boxSizing:
+                                                "border-box",
+                                            zIndex:
+                                                20,
+                                            maxHeight:
+                                                "450px",
+                                            overflowY:
+                                                "auto",
+                                            outline:
+                                                "none"
+                                        }}
+                                    >
+                                        {
+                                            sortedPlanets.map(
+                                                (
+                                                    planet,
+                                                    index
+                                                ) => {
+                                                    const owner =
+                                                        owners.find(
+                                                            owner =>
+                                                                owner.id ===
+                                                                planet.owner_id
+                                                        );
+
+                                                    return (
+                                                        <div
+                                                            key={
+                                                                planet.id
+                                                            }
+                                                            ref={
+                                                                element => {
+                                                                    startPlanetOptionRefs.current[
+                                                                        planet.id
+                                                                    ] =
+                                                                        element;
+                                                                }
+                                                            }
+                                                            onClick={() => {
+                                                                selectPlanetPoint(
+                                                                    "start",
+                                                                    planet.id
+                                                                );
+
+                                                                closeStartDropdown();
+                                                            }}
+                                                            style={{
+                                                                display:
+                                                                    "flex",
+                                                                alignItems:
+                                                                    "center",
+                                                                gap:
+                                                                    "6px",
+                                                                padding:
+                                                                    "5px",
+                                                                cursor:
+                                                                    "pointer",
+                                                                background:
+                                                                    startKeyboardIndex ===
+                                                                    index
+                                                                        ? "#ffffff22"
+                                                                        : "transparent"
+                                                            }}
+                                                        >
+                                                            <span
+                                                                style={{
+                                                                    width:
+                                                                        "12px",
+                                                                    height:
+                                                                        "12px",
+                                                                    borderRadius:
+                                                                        "50%",
+                                                                    background:
+                                                                        owner?.color ??
+                                                                        "white",
+                                                                    flexShrink:
+                                                                        0
+                                                                }}
+                                                            />
+
+                                                            <span>
+                                                                {
+                                                                    planet.name
+                                                                }
+                                                            </span>
+                                                        </div>
+                                                    );
+                                                }
+                                            )
+                                        }
+                                    </div>
+                                )
+                            }
+                        </div>
+
+                        <XYZDisplay
+                            x={
+                                startPoint.x
+                            }
+                            y={
+                                startPoint.y
+                            }
+                            z={
+                                startPoint.z
+                            }
+                        />
+                    </div>
+                )
             }
 
             <h4
                 style={{
-                    marginBottom: "5px"
+                    marginBottom:
+                        "5px"
                 }}
             >
                 Zielpunkt
             </h4>
 
             <InputTabs
-                value={targetMode}
-                onChange={setTargetMode}
+                value={
+                    targetMode
+                }
+                onChange={
+                    setTargetMode
+                }
             />
 
             {
                 targetMode === "xyz" &&
-                renderXYZInput("target")
+                renderXYZInput(
+                    "target"
+                )
             }
 
             {
                 targetMode === "address" &&
-                <div
-                    style={{
-                        marginTop: "20px",
-                        marginBottom: "40px"
-                    }}
-                >
-                    <input
-                        placeholder="Adresse eingeben"
-                        value={targetAddress}
-                        onChange={event => {
-                            const value =
-                                event.target.value;
-
-                            setTargetAddress(value);
-
-                            updateAddressPoint(
-                                "target",
-                                value
-                            );
+                (
+                    <div
+                        style={{
+                            marginTop:
+                                "20px",
+                            marginBottom:
+                                "40px"
                         }}
-                    />
+                    >
+                        <input
+                            placeholder="Adresse eingeben"
+                            value={
+                                targetAddress
+                            }
+                            onChange={
+                                event => {
+                                    const value =
+                                        event
+                                            .target
+                                            .value;
 
-                    <XYZDisplay
-                        x={targetPoint.x}
-                        y={targetPoint.y}
-                        z={targetPoint.z}
-                    />
-                </div>
+                                    setTargetAddress(
+                                        value
+                                    );
+
+                                    updateAddressPoint(
+                                        "target",
+                                        value
+                                    );
+                                }
+                            }
+                        />
+
+                        <XYZDisplay
+                            x={
+                                targetPoint.x
+                            }
+                            y={
+                                targetPoint.y
+                            }
+                            z={
+                                targetPoint.z
+                            }
+                        />
+                    </div>
+                )
             }
 
             {
                 targetMode === "planet" &&
-                <div
-                    style={{
-                        marginTop: "20px",
-                        marginBottom: "40px"
-                    }}
-                >
-                    <select
-                        onChange={event => {
-                            selectPlanetPoint(
-                                "target",
-                                event.target.value
-                            );
+                (
+                    <div
+                        style={{
+                            marginTop:
+                                "20px",
+                            marginBottom:
+                                "40px"
                         }}
                     >
-                        <option value="">
-                            Planet auswählen
-                        </option>
+                        <div
+                            style={{
+                                position:
+                                    "relative",
+                                width:
+                                    "200px"
+                            }}
+                        >
+                            <button
+                                onClick={() => {
+                                    if(
+                                        targetPlanetDropdownOpen
+                                    ){
+                                        closeTargetDropdown();
 
-                        {
-                            planets.map(planet => (
-                                <option
-                                    key={planet.id}
-                                    value={planet.id}
-                                >
-                                    {planet.name}
-                                </option>
-                            ))
-                        }
-                    </select>
+                                        return;
+                                    }
 
-                    <XYZDisplay
-                        x={targetPoint.x}
-                        y={targetPoint.y}
-                        z={targetPoint.z}
-                    />
-                </div>
+                                    setTargetKeyboardIndex(
+                                        -1
+                                    );
+
+                                    resetTargetKeyboardSearch();
+
+                                    setTargetPlanetDropdownOpen(
+                                        true
+                                    );
+
+                                    window.setTimeout(
+                                        () => {
+                                            targetPlanetDropdownRef.current?.focus();
+                                        },
+                                        0
+                                    );
+                                }}
+                                style={{
+                                    width:
+                                        "100%",
+                                    padding:
+                                        "2px 8px",
+                                    cursor:
+                                        "pointer",
+                                    textAlign:
+                                        "left",
+                                    boxSizing:
+                                        "border-box"
+                                }}
+                            >
+                                {
+                                    selectedTargetPlanet
+                                        ? (
+                                            <span
+                                                style={{
+                                                    display:
+                                                        "flex",
+                                                    alignItems:
+                                                        "center",
+                                                    gap:
+                                                        "6px"
+                                                }}
+                                            >
+                                                <span
+                                                    style={{
+                                                        width:
+                                                            "12px",
+                                                        height:
+                                                            "12px",
+                                                        borderRadius:
+                                                            "50%",
+                                                        background:
+                                                            selectedTargetPlanetOwner?.color ??
+                                                            "white",
+                                                        flexShrink:
+                                                            0
+                                                    }}
+                                                />
+
+                                                {
+                                                    selectedTargetPlanet.name
+                                                }
+                                            </span>
+                                        )
+                                        : "Planet auswählen"
+                                }
+                            </button>
+
+                            {
+                                targetPlanetDropdownOpen &&
+                                (
+                                    <div
+                                        ref={
+                                            targetPlanetDropdownRef
+                                        }
+                                        tabIndex={
+                                            0
+                                        }
+                                        onKeyDown={
+                                            handleTargetPlanetKeyDown
+                                        }
+                                        style={{
+                                            position:
+                                                "absolute",
+                                            top:
+                                                "100%",
+                                            left:
+                                                0,
+                                            width:
+                                                "100%",
+                                            background:
+                                                "#102544",
+                                            border:
+                                                "1px solid #ffffff33",
+                                            padding:
+                                                "8px",
+                                            boxSizing:
+                                                "border-box",
+                                            zIndex:
+                                                20,
+                                            maxHeight:
+                                                "450px",
+                                            overflowY:
+                                                "auto",
+                                            outline:
+                                                "none"
+                                        }}
+                                    >
+                                        {
+                                            sortedPlanets.map(
+                                                (
+                                                    planet,
+                                                    index
+                                                ) => {
+                                                    const owner =
+                                                        owners.find(
+                                                            owner =>
+                                                                owner.id ===
+                                                                planet.owner_id
+                                                        );
+
+                                                    return (
+                                                        <div
+                                                            key={
+                                                                planet.id
+                                                            }
+                                                            ref={
+                                                                element => {
+                                                                    targetPlanetOptionRefs.current[
+                                                                        planet.id
+                                                                    ] =
+                                                                        element;
+                                                                }
+                                                            }
+                                                            onClick={() => {
+                                                                selectPlanetPoint(
+                                                                    "target",
+                                                                    planet.id
+                                                                );
+
+                                                                closeTargetDropdown();
+                                                            }}
+                                                            style={{
+                                                                display:
+                                                                    "flex",
+                                                                alignItems:
+                                                                    "center",
+                                                                gap:
+                                                                    "6px",
+                                                                padding:
+                                                                    "5px",
+                                                                cursor:
+                                                                    "pointer",
+                                                                background:
+                                                                    targetKeyboardIndex ===
+                                                                    index
+                                                                        ? "#ffffff22"
+                                                                        : "transparent"
+                                                            }}
+                                                        >
+                                                            <span
+                                                                style={{
+                                                                    width:
+                                                                        "12px",
+                                                                    height:
+                                                                        "12px",
+                                                                    borderRadius:
+                                                                        "50%",
+                                                                    background:
+                                                                        owner?.color ??
+                                                                        "white",
+                                                                    flexShrink:
+                                                                        0
+                                                                }}
+                                                            />
+
+                                                            <span>
+                                                                {
+                                                                    planet.name
+                                                                }
+                                                            </span>
+                                                        </div>
+                                                    );
+                                                }
+                                            )
+                                        }
+                                    </div>
+                                )
+                            }
+                        </div>
+
+                        <XYZDisplay
+                            x={
+                                targetPoint.x
+                            }
+                            y={
+                                targetPoint.y
+                            }
+                            z={
+                                targetPoint.z
+                            }
+                        />
+                    </div>
+                )
             }
 
             <hr />
 
             <div
                 style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "10px",
-                    marginTop: "15px"
+                    display:
+                        "flex",
+                    alignItems:
+                        "center",
+                    gap:
+                        "10px",
+                    marginTop:
+                        "15px"
                 }}
             >
                 <label>
@@ -525,21 +1566,31 @@ export default function FlightTimeWindow({
 
                 <input
                     style={{
-                        width: "50px"
+                        width:
+                            "50px"
                     }}
                     type="number"
                     placeholder="1.23"
                     step="0.01"
-                    value={speed}
-                    onChange={event => {
-                        setSpeed(
-                            event.target.value === ""
-                                ? ""
-                                : Number(
-                                    event.target.value
-                                )
-                        );
-                    }}
+                    value={
+                        speed
+                    }
+                    onChange={
+                        event => {
+                            setSpeed(
+                                event
+                                    .target
+                                    .value ===
+                                    ""
+                                    ? ""
+                                    : Number(
+                                        event
+                                            .target
+                                            .value
+                                    )
+                            );
+                        }
+                    }
                 />
 
                 <label>
@@ -548,9 +1599,12 @@ export default function FlightTimeWindow({
 
                 <button
                     style={{
-                        marginLeft: "20px"
+                        marginLeft:
+                            "20px"
                     }}
-                    onClick={calculate}
+                    onClick={
+                        calculate
+                    }
                 >
                     Berechnen
                 </button>

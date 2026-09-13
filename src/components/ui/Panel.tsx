@@ -16,6 +16,7 @@ type Props = {
     initialX?: number;
     initialY?: number;
     zIndex?: number;
+    overflowVisible?: boolean;
 };
 
 type PanelSize = {
@@ -37,7 +38,8 @@ export default function Panel({
     minHeight = 200,
     initialX = 30,
     initialY = 100,
-    zIndex = 100
+    zIndex = 100,
+    overflowVisible = false
 }: Props) {
     const storageKey =
         title
@@ -146,7 +148,7 @@ export default function Panel({
     }, [
         message,
         onMessageClear
-    ]);    
+    ]);
 
     const startDrag = (
         event: ReactMouseEvent<HTMLDivElement>
@@ -374,7 +376,10 @@ export default function Panel({
                 <div
                     style={{
                         height: "calc(100% - 40px)",
-                        overflow: "auto"
+                        overflow:
+                            overflowVisible
+                                ? "visible"
+                                : "auto"
                     }}
                 >
                     {children}
