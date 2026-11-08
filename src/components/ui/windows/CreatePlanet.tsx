@@ -40,7 +40,8 @@ export default function CreatePlanet({ onFocus, zIndex }: Props) {
         x: presetPosition?.x ?? 1,
         y: presetPosition?.y ?? 1,
         z: presetPosition?.z ?? 1,
-        owner_id: getDefaultOwnerId()
+        owner_id: getDefaultOwnerId(),
+        sensor_level: 20
     });
 
     const [planet, setPlanet] = useState<Planet>(createEmptyPlanet);
