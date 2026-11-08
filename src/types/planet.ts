@@ -5,4 +5,5 @@ export type Planet = {
   y: number;
   z: number;
   owner_id: string;
+  sensor_level: number;
 };

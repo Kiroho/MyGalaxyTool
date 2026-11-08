@@ -9,6 +9,7 @@ type UIStore = {
     showSensors: boolean;
     createPlanetWindow: {
         open: boolean;
+        openVersion: number;
         presetPosition: {
             x: number;
             y: number;
@@ -64,6 +65,7 @@ export const useUIStore = create<UIStore>((set, get) => ({
     showSensors: false,
     createPlanetWindow: {
         open: false,
+        openVersion: 0,
         presetPosition: null
     },
     ownerWindow: {
@@ -124,6 +126,8 @@ export const useUIStore = create<UIStore>((set, get) => ({
         set(state => ({
             createPlanetWindow: {
                 open: true,
+                openVersion:
+                    state.createPlanetWindow.openVersion + 1,
                 presetPosition: null
             },
             panelOrder: [
@@ -137,6 +141,8 @@ export const useUIStore = create<UIStore>((set, get) => ({
         set(state => ({
             createPlanetWindow: {
                 open: true,
+                openVersion:
+                    state.createPlanetWindow.openVersion + 1,
                 presetPosition: position
             },
             panelOrder: [
@@ -150,6 +156,7 @@ export const useUIStore = create<UIStore>((set, get) => ({
         set({
             createPlanetWindow: {
                 open: false,
+                openVersion: get().createPlanetWindow.openVersion,
                 presetPosition: null
             }
         }),

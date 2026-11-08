@@ -1,10 +1,11 @@
 import { useState } from "react";
 import buildings from "../../../data/buildings.json";
-import { calculateBuildingTotalHp } from "../../../utils/calcBuilding";
+import { calculateBuildingHp, calculateBuildingTotalHp } from "../../../utils/calcBuilding";
 import { calculateFleetDamage } from "../../../utils/calcFleet";
 import { useUIStore } from "../../../store/uiStore";
 import { useOwnerStore } from "../../../store/ownerStore";
 import Panel from "../Panel";
+import { CircleHelp } from "lucide-react";
 
 type Props = {
     onFocus?: () => void;
@@ -45,6 +46,9 @@ export default function BuildingWindow({
             state => state.owners
         );
 
+    const [showHpTooltip, setShowHpTooltip] =
+        useState(false);
+
     const [selectedBuildings, setSelectedBuildings] =
         useState<
             {
@@ -62,6 +66,7 @@ export default function BuildingWindow({
                 )
         );
 
+
     const selectedBuildingDamage =
         selectedBuildings
             .filter(
@@ -75,19 +80,12 @@ export default function BuildingWindow({
                     )
             );
 
-    const selectedBuildingCount =
-        selectedBuildingDamage.length;
-
-    const highestBuildingDamage =
-        selectedBuildingCount > 0
-            ? Math.max(
-                ...selectedBuildingDamage
-            )
-            : 0;
-
     const selectedBuildingTotal =
-        highestBuildingDamage *
-        selectedBuildingCount;
+        selectedBuildingDamage.reduce(
+            (total, damage) => total + damage,
+            0
+        );
+
 
     const [levels, setLevels] =
         useState<Record<string, number>>(
@@ -191,6 +189,125 @@ export default function BuildingWindow({
             zIndex={zIndex}
             overflowVisible
         >
+            <div
+                style={{
+                    display:"flex",
+                    justifyContent:"flex-end",
+                    alignItems:"center",
+                    height:"28px",
+                    position:"relative"
+                }}
+            >
+                <div
+                    style={{
+                        position:"relative",
+                        display:"flex",
+                        alignItems:"center"
+                    }}
+                    onMouseEnter={() =>
+                        setShowHpTooltip(true)
+                    }
+                    onMouseLeave={() =>
+                        setShowHpTooltip(false)
+                    }
+                >
+                    <CircleHelp
+                        size={18}
+                        strokeWidth={2}
+                        style={{
+                            cursor:"help"
+                        }}
+                    />
+
+                    {
+                        showHpTooltip &&
+                        <div
+                            style={{
+                                position:"absolute",
+                                top:"24px",
+                                left:"0",
+                                zIndex:10001,
+                                width:"190px",
+                                background:"#fff",
+                                color:"#000",
+                                border:"1px solid #777",
+                                borderRadius:"4px",
+                                padding:"8px",
+                                boxShadow:
+                                    "0 4px 12px rgba(0,0,0,0.35)",
+                                fontSize:"13px",
+                                fontWeight:"normal"
+                            }}
+                        >
+                            <div
+                                style={{
+                                    display:"grid",
+                                    gridTemplateColumns:"1fr 1fr",
+                                    gap:"0 12px",
+                                    paddingBottom:"5px",
+                                    marginBottom:"4px",
+                                    borderBottom:"1px solid #999",
+                                    fontWeight:"bold"
+                                }}
+                            >
+                                <span>
+                                    Stufe
+                                </span>
+
+                                <span
+                                    style={{
+                                        textAlign:"right"
+                                    }}
+                                >
+                                    HP
+                                </span>
+                            </div>
+
+                            {
+                                Array.from(
+                                    { length:30 },
+                                    (_, index) => {
+
+                                        const level =
+                                            index + 1;
+
+                                        return (
+                                            <div
+                                                key={level}
+                                                style={{
+                                                    display:"grid",
+                                                    gridTemplateColumns:"1fr 1fr",
+                                                    gap:"0 12px",
+                                                    padding:"2px 0"
+                                                }}
+                                            >
+                                                <span>
+                                                    {level}
+                                                </span>
+
+                                                <span
+                                                    style={{
+                                                        textAlign:"right"
+                                                    }}
+                                                >
+                                                    {
+                                                        calculateBuildingHp(
+                                                            level
+                                                        ).toLocaleString(
+                                                            "de-DE"
+                                                        )
+                                                    }
+                                                </span>
+                                            </div>
+                                        );
+                                    }
+                                )
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
             {
                 buildings.map(
                     building => {
